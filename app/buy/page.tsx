@@ -1,5 +1,4 @@
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+
 import React, { Suspense } from "react";
 import { NFTGridLoading } from "@/components/NFT/NFTGrid";
 import ListingGrid from "@/components/ListingGrid/ListingGrid";
@@ -13,12 +12,7 @@ export default function Buy() {
 			<div className="my-8">
 				<Suspense fallback={<NFTGridLoading />}>
 					<ListingGrid
-						marketplace={MARKETPLACE}
-						collection={NFT_COLLECTION}
-						emptyText={
-							"Looks like there are no listed NFTs in this collection. Did you import your contract on the thirdweb dashboard? https://thirdweb.com/dashboard"
-						}
-					/>
+						marketplace={MARKETPLACE} emptyText={""} collection={NFT_COLLECTION}						/>
 				</Suspense>
 			</div>
 		</div>

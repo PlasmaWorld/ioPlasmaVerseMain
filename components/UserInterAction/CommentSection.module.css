@@ -1,0 +1,53 @@
+.commentsContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 30px; 
+    margin: 100px;
+}
+
+.eventCard {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    width: 300px; 
+    height: 200px; 
+    padding: 10px;
+    background-color: #d1d0d0; 
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
+    border-radius: 10px; 
+    overflow: hidden; 
+    margin-bottom: 20px; 
+}
+
+.eventHeader {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px; 
+}
+
+.connectedAddress {
+    font-size: 14px;
+    color: #333;
+    font-weight: bold;
+}
+
+.eventCard img {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%; 
+    object-fit: cover; 
+}
+
+.eventCard p {
+    font-size: 16px;
+    color: #000000;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 3; 
+    -webkit-box-orient: vertical;
+}

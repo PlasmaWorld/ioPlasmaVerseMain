@@ -1,0 +1,13 @@
+.newsCard {
+    background-color: rgb(243, 241, 241) !important; /* Ensure the card matches the dark theme */
+    color: rgb(201, 103, 103);
+  }
+  
+  .newsCard .mantine-Text-root {
+    color: rgb(2, 2, 2); /* Ensure text inside the card is white */
+  }
+  
+  .newsCard .mantine-Text-root .description {
+    color: rgb(170, 73, 73); /* Set a lighter color for descriptions */
+  }
+  

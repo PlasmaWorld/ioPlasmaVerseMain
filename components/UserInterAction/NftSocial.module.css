@@ -1,0 +1,291 @@
+.nftCard {
+  width: 100%;
+  max-width: 420px;
+  min-height: 340px;
+  display: flex;
+  flex-direction: column;
+  background-color: #239cd3;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: box-shadow 0.3s ease;
+  margin-bottom: 20px;
+  position: relative; /* Ensure we can position children absolutely */
+}
+
+
+.nftContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-y: auto;
+  gap: 16px;
+  padding: 20px;
+  margin-top: 20px;
+}
+
+.nftCard:hover {
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.15);
+}
+
+.relative, .imageWrapper {
+  position: relative; /* Adjusted for positioning context */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.imageWrapper {
+  flex: 10;
+  display: 100%;
+  justify-content: center;
+  align-items: center;
+}
+
+
+.imageContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 220px;
+  width: 100%;
+  overflow: hidden; /* Keeps the image within the bounds of this container */
+}
+
+.nftImage {
+  width: 205px ; /* Full width of the container */
+  height: 100%; /* Full height of the container */
+  object-fit: contain; /* Ensures the image is fully visible, might add borders if aspect ratio differs */
+}
+
+
+.nftInfo {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background-color: rgba(0,0,0,0.2);
+}
+
+.infoTopRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.8);
+  padding: 6px 12px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.connectedAddress, .nftTimestamp {
+  color: #d42626;
+  font-weight: 600;
+}
+
+.burnButton {
+  top: 1px;
+  right: 1px; 
+  position: absolute;
+  width: 45px; /* Smaller width for the button */
+  height: 45px; /* Smaller height for the button */
+  padding: 5px; /* Temporarily, to visualize their space */
+}
+
+.ProfileImage {
+  top: 1px;
+  left: 1px; 
+  position: absolute;
+  width: 45px; /* Smaller width for the button */
+  height: 45px; /* Smaller height for the button */
+  padding: 5px; /* Temporarily, to visualize their space */
+}
+
+.addCommentButton {
+  width: 45px; /* Smaller width for the button */
+  height: 45px; /* Smaller height for the button */
+  padding: 5px;
+}
+
+.burnButton img {
+  width: 100%; /* Ensures the image covers the button area */
+  height: auto; /* Maintains aspect ratio */
+}
+
+.burnButton:hover {
+  background-color: #ff6161;
+}
+
+.burnButton:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+.likesText {
+  font-size: 22px;
+  color: #ba1b1b; /* Adjust based on your theme */
+}
+
+.likeButton {
+  width: 40px; /* Match the size of the addCommentButton */
+  height: 40px; /* Match the size of the addCommentButton */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: transparent; /* To blend with any background; adjust as needed */
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+}
+
+.likeButton img {
+  width: 100%; /* Ensure the image fills the button */
+  height: auto; /* Maintain aspect ratio */
+}
+
+/* Additional styling for when the button is disabled */
+.likeButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Styling for error messages */
+.likeError {
+  color: #ff3860; /* Error color, can adjust based on your theme */
+  margin-top: 5px;
+  text-align: center;
+}
+
+.burnIcon, .loadingIcon {
+  width: 4px; /* Adjusted size of the icons */
+  height: 4px; /* Adjusted size of the icons */
+}
+
+
+.nftDescriptionContainer {
+  background-color: #f8f9fa; /* Light background for the description area */
+  color: #343a40; /* Dark text for contrast */
+  padding: 20px; /* Provides internal space around the description text */
+  border-radius: 12px; /* Smooth rounded corners */
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
+  margin: 15px; /* External spacing from container edges or other elements */
+  overflow: hidden; /* Keeps the overflow content managed */
+  position: relative; /* To position pseudo-elements or any additional styling effectively */
+  transition: background-color 0.3s ease; /* Smooth transition for any background-color change */
+}
+
+.nftDescription {
+  font-size: 16px; /* Maintains legibility */
+  line-height: 1.5; /* Improves readability */
+  color: inherit; /* Ensures text color consistency with the container */
+  overflow-y: auto; /* Enables vertical scrolling for overflow content */
+  max-height: 200px; /* Limits the height to encourage scrolling on overflow */
+  scrollbar-width: thin; /* Ensures the scrollbar is not obtrusive */
+  scrollbar-color: #adb5bd #f8f9fa; /* Custom scrollbar colors for visibility and aesthetics */
+}
+
+/* Styling for Webkit browsers to ensure scrollbar aesthetics align with the modern design */
+.nftDescription::-webkit-scrollbar {
+  width: 8px; /* Narrow scrollbar for a cleaner look */
+}
+
+.nftDescription::-webkit-scrollbar-track {
+  background: #f8f9fa;
+}
+
+.nftDescription::-webkit-scrollbar-thumb {
+  background-color: #adb5bd;
+  border-radius: 20px; /* Rounded scrollbar thumb for a smooth, modern aesthetic */
+}
+
+/* Adjust the .readMoreLink button style if necessary */
+.readMoreLink {
+  background-color: #007bff;
+  color: white;
+  font-weight: bold;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  display: inline-block; /* For margin auto to work */
+  margin-top: 10px; /* Spacing from the description text */
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+}
+
+.expanded {
+  max-height: none;
+  overflow-y: auto; /* Show scrollbar if content overflows */
+}
+.readCommentsButton {
+  display: block; /* Ensures the button behaves as a block-level element */
+  text-align: center;
+  background-color: #007bff;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: none;
+  transition: background-color 0.3s ease;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.showMore, .readMoreLink{
+  text-align: center;
+  background-color: #007bff;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: none;
+  transition: background-color 0.3s ease;
+}
+
+.showMore:hover, .readMoreLink:hover, .readCommentsButton:hover {
+  background-color: #0056b3;
+}
+
+
+
+
+
+.timestampText {
+  position: absolute;
+  top: 10px;
+  right: 50%;
+  transform: translateX(50%);
+  color: #ba1b1b;
+  font-size: 12px;
+  background-color: transparent;
+  padding: 5px;
+  border-radius: 5px;
+}
+.successMessage, .errorMessage {
+  position: fixed; /* Fixed relative to the viewport */
+  top: 20px;       /* 20px from the top of the viewport */
+  left: 50%;       /* Center horizontally */
+  transform: translateX(-50%); /* Shift left by half its width to center it */
+  z-index: 1050;   /* High z-index to ensure it's on top of other content */
+  color: white;
+  padding: 10px 20px;
+  border-radius: 5px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  width: auto; /* Adjust width as needed */
+  max-width: 90%; /* Avoid too wide messages */
+}
+.successMessage {
+  background-color: #4CAF50; /* Example: Green for success */
+}
+.errorMessage {
+  background-color: #f44336; /* Example: Red for error */
+}
+
+.statusEventsCustom {
+  padding: 10px;
+  border: 1px solid #eee;
+  max-width: 100%;
+  overflow: auto;
+}

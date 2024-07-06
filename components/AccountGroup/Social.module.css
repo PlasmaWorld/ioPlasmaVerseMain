@@ -1,0 +1,191 @@
+/* Social.module.css */
+
+.socialPostCreator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.5);
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1000;
+}
+
+.closeButton {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.statusModalContainer {
+  width: 80%;
+  max-width: 1200px;
+  background-color: #f9f9f9;
+  border-radius: 10px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin: 20px auto;
+  overflow-y: auto;
+  z-index: 1010;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.statusModalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.statusModalHeader h2 {
+  margin: 0;
+  color: #333;
+}
+
+.statusModalHeader button {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  color: #007bff;
+}
+
+.inputField, .textareaInput, .selectField {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 15px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-family: 'Helvetica', 'Arial', sans-serif;
+  font-size: 14px;
+}
+
+.textareaInput {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.deliveryAddressContainer {
+  width: 100%;
+  background-color: #f1f1f1;
+  border-radius: 10px;
+  padding: 15px;
+  margin-bottom: 15px;
+}
+
+.deliveryAddressContainer h3 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.fileInputContainer {
+  margin: 10px 0;
+  position: relative;
+  text-align: center;
+  width: 100%;
+}
+
+.fileInputLabel {
+  display: inline-block;
+  background-color: #007bff;
+  color: #fff;
+  padding: 8px 20px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.3s;
+}
+
+.fileInputLabel:hover {
+  background-color: #0056b3;
+}
+
+.fileInput {
+  visibility: hidden;
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.mintButton {
+  background-color: #28a745;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: 500;
+  text-transform: uppercase;
+  width: 100%;
+  max-width: 200px;
+  text-align: center;
+}
+
+.mintButton:hover {
+  background-color: #218838;
+}
+
+.error {
+  color: red;
+  margin-top: 10px;
+}
+
+.threejsContainer {
+  width: 100%;
+  height: 600px;
+  position: relative;
+  margin-top: 20px; /* Added margin to separate from the upload button */
+  z-index: 1020;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Additional styles for project input fields */
+.projectInputContainer {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin-bottom: 15px;
+}
+
+.projectInputContainer input {
+  margin-bottom: 10px;
+}
+
+.addButton {
+  background-color: #007bff;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: 500;
+  text-transform: uppercase;
+  width: 100%;
+  max-width: 200px;
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.addButton:hover {
+  background-color: #0056b3;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .statusModalContainer {
+    width: 90%;
+  }
+}

@@ -1,57 +1,92 @@
+"use client";
+
 import {
+  DirectListing,
+  EnglishAuction,
+  Offer,
   getAllValidAuctions,
   getAllValidListings,
+  getAllValidOffers,
 } from "thirdweb/extensions/marketplace";
 import { NFT as NFTType, ThirdwebContract } from "thirdweb";
-import React, { Suspense } from "react";
-import { MARKETPLACE, NFT_COLLECTION } from "../../const/contracts";
+import React, { Suspense, useState, useEffect } from "react";
+import { MARKETPLACE } from "../../const/contracts";
 import NFTGrid, { NFTGridLoading } from "../NFT/NFTGrid";
+import { useReadContract } from "thirdweb/react";
 
 type Props = {
-	marketplace: ThirdwebContract;
-	collection: ThirdwebContract;
-	overrideOnclickBehavior?: (nft: NFTType) => void;
-	emptyText: string;
+  marketplace: ThirdwebContract;
+  collection: ThirdwebContract;
+  overrideOnclickBehavior?: (nft: NFTType) => void;
+  emptyText: string;
 };
 
-export default async function ListingGrid(props: Props) {
-  const listingsPromise = getAllValidListings({
-    contract: MARKETPLACE,
-  });
-  const auctionsPromise = getAllValidAuctions({
+export default function ListingGrid(props: Props) {
+  const [nftDataListing, setNftDataListing] = useState<DirectListing[]>([]);
+  const [nftDataAuction, setNftDataAuction] = useState<EnglishAuction[]>([]);
+  const [nftDataOffer, setNftDataOffer] = useState<Offer[]>([]);
+
+  const {
+    data: allValidListings,
+    isLoading: isLoadingValidListings,
+    refetch: refetchAllListings,
+    isRefetching: isRefetchingAllListings,
+  } = useReadContract(getAllValidListings, {
     contract: MARKETPLACE,
   });
 
-  const [listings, auctions] = await Promise.all([
-    listingsPromise,
-    auctionsPromise,
-  ]);
+  const {
+    data: allValidAuctions,
+    isLoading: isLoadingValidAuctions,
+    refetch: refetchAllAuctions,
+    isRefetching: isRefetchingAllAuctions,
+  } = useReadContract(getAllValidAuctions, {
+    contract: MARKETPLACE,
+  });
 
-  // Retrieve all NFTs from the listings
+  const {
+    data: allValidOffers,
+    isLoading: isLoadingValidOffers,
+    refetch: refetchAllOffers,
+    isRefetching: isRefetchingAllOffers,
+  } = useReadContract(getAllValidOffers, {
+    contract: MARKETPLACE,
+  });
+
+  useEffect(() => {
+    const fetchData = async () => {
+      await refetchAllListings();
+      await refetchAllAuctions();
+      await refetchAllOffers();
+    };
+    fetchData();
+  }, [refetchAllListings, refetchAllAuctions, refetchAllOffers]);
+
+  if (isLoadingValidListings || isLoadingValidAuctions || isLoadingValidOffers) {
+    return <NFTGridLoading />;
+  }
+
+  if (!allValidListings || !allValidAuctions || !allValidOffers) {
+    return <div>{props.emptyText}</div>;
+  }
+
   const tokenIds = Array.from(
     new Set([
-      ...listings
-        .filter(
-          (l) => l.assetContractAddress === NFT_COLLECTION.address
-        )
-        .map((l) => l.tokenId),
-      ...auctions
-        .filter(
-          (a) => a.assetContractAddress === NFT_COLLECTION.address
-        )
-        .map((a) => a.tokenId),
+      ...allValidListings.filter((l) => l.assetContractAddress).map((l) => l.tokenId),
+      ...allValidAuctions.filter((a) => a.assetContractAddress).map((a) => a.tokenId),
+      ...allValidOffers.filter((a) => a.assetContractAddress).map((a) => a.tokenId),
     ])
   );
 
   const nftData = tokenIds.map((tokenId) => {
+    const directListings = allValidListings.filter((listing) => listing.tokenId === tokenId);
+    const auctionListings = allValidAuctions.filter((listing) => listing.tokenId === tokenId);
+    const directOffers = allValidOffers.filter((offer) => offer.tokenId === tokenId);
+
     return {
       tokenId: tokenId,
-      directListing: listings.find(
-        (listing) => listing.tokenId === tokenId
-      ),
-      auctionListing: auctions.find(
-        (listing) => listing.tokenId === tokenId
-      ),
+      listing: [...directListings, ...auctionListings],
+      offers: directOffers,
     };
   });
 
@@ -61,6 +96,9 @@ export default async function ListingGrid(props: Props) {
         nftData={nftData}
         emptyText={props.emptyText}
         overrideOnclickBehavior={props.overrideOnclickBehavior}
+        refetchAllListings={refetchAllListings}
+        refetchAllAuctions={refetchAllAuctions}
+        refetchAllOffers={refetchAllOffers}
       />
     </Suspense>
   );

@@ -1,0 +1,102 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 1rem;
+  gap: 2rem;
+}
+
+.title {
+  font-size: 2.5rem;
+  color: #cfcfcf;
+  margin-bottom: 1rem;
+}
+
+.featuresContainer {
+  display: flex;
+  flex-direction: row; 
+  justify-content: center;
+  align-items: flex-start;
+  gap: 20px;
+  overflow-x: auto; 
+  -webkit-overflow-scrolling: touch; 
+  scrollbar-width: thin;
+  scrollbar-color: #888 #ffffff;
+  width: 100%;
+  padding-bottom: 1rem; 
+}
+
+.featuresContainer::-webkit-scrollbar {
+  height: 8px; 
+}
+
+.featuresContainer::-webkit-scrollbar-track {
+  background: #ffffff; 
+}
+
+.featuresContainer::-webkit-scrollbar-thumb {
+  background-color: #888; 
+  border-radius: 4px;
+}
+
+.textContent, .featuresList {
+  display: inline-flex;
+  flex-direction: column;
+}
+
+.text, .listItem {
+  font-size: 1.5rem;
+  color: #dfdfdf;
+}
+
+
+.button, .outlineButton {
+  font-size: 1rem;
+  padding: 10px 20px;
+  cursor: pointer;
+  margin-top: 1rem;
+  border: none;
+}
+
+.button {
+  background-color: #007bff;
+  color: white;
+}
+
+.outlineButton {
+  background-color: transparent;
+  color: #007bff;
+  border: 2px solid #007bff;
+}
+
+.heroImage {
+  width: 100%;
+  max-width: 999px; 
+  height: auto;
+  object-fit: cover;
+}
+
+.additionalImage {
+  display: block; 
+  width: 100%;
+  max-width: 999px; 
+  height: auto;
+  object-fit: cover;
+  margin-top: 140px; 
+}
+.additionalVideo {
+  display: block;
+  width: 100%;
+  max-width: 999px;
+  height: auto;
+  object-fit: cover;
+  margin-top: 140px;
+}
+
+@media (max-width: 768px) {
+  .additionalImage {
+    max-width: 450px; 
+    margin-top: 20px;
+  }
+}

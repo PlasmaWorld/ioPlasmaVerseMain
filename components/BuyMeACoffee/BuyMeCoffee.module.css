@@ -1,0 +1,70 @@
+.container {
+    border: 1px solid #252525;
+    padding: 2rem;
+    border-radius: 6px;
+    width: 500px;
+    position: relative;
+    background: #fff;
+  }
+  
+  .closeButton {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+  }
+  
+  .header {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+  
+  .form {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .label {
+    font-size: 1.15rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .tipNote {
+    font-size: 10px;
+    color: #f7f2f2;
+    margin-bottom: 0.5rem;
+  }
+  
+  .input {
+    padding: 0.5rem;
+    color: #f7f2f2;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+  }
+  
+  .transactionButton {
+    background-color: royalblue;
+    color: white;
+    font-size: 0.75rem;
+    padding: 0.5rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .transactionButton:hover {
+    background-color: darkblue;
+  }
+  
+  .recentCoffees {
+    margin-top: 2rem;
+  }
+  
+  .recentCoffeesTitle {
+    font-size: 1.15rem;
+  }
+  

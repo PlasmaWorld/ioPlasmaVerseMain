@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { NFT } from "thirdweb";
+import { NFT as NFTType, Address } from "thirdweb";
+
 import { NFT_COLLECTION } from "../../const/contracts";
 import { DirectListing, EnglishAuction } from "thirdweb/extensions/marketplace";
 import { MediaRenderer } from "thirdweb/react";
@@ -8,36 +9,37 @@ import { getNFT } from "thirdweb/extensions/erc721";
 import client from "@/lib/client";
 import Skeleton from "@/components/Skeleton";
 import { useRouter } from "next/navigation";
+import { getContractInstance } from "@/const/cotractInstance";
 
 type Props = {
 	tokenId: bigint;
-	nft?: NFT;
-	directListing?: DirectListing;
-	auctionListing?: EnglishAuction;
-	overrideOnclickBehavior?: (nft: NFT) => void;
+  listing: DirectListing | EnglishAuction;
+
 };
 
 export default function NFTComponent({
   tokenId,
-  directListing,
-  auctionListing,
-  overrideOnclickBehavior,
+  listing,
   ...props
 }: Props) {
   const router = useRouter();
-  const [nft, setNFT] = useState(props.nft);
+  const [nft, setNFT] = useState<NFTType | null>(null);
 
   useEffect(() => {
-    if (nft?.id !== tokenId) {
+    if (tokenId) {
+
+      const contract = getContractInstance(listing?.assetContractAddress as string);
+
       getNFT({
-        contract: NFT_COLLECTION,
-        tokenId: tokenId,
+        contract: contract,
+        tokenId: BigInt(tokenId), // Ensure tokenId is converted to bigint
         includeOwner: true,
       }).then((nft) => {
         setNFT(nft);
+      }).catch((error) => {
       });
     }
-  }, [tokenId, nft?.id]);
+  }, [tokenId, listing?.assetContractAddress]);
 
   if (!nft) {
     return <LoadingNFTComponent />;
@@ -46,16 +48,7 @@ export default function NFTComponent({
   return (
     <div
       className="cursor-pointer transition-all hover:scale-105 hover:shadow-lg flex flex-col w-full h-[350px] bg-white/[.04] justify-stretch border overflow-hidden border-white/10 rounded-lg"
-      onClick={
-        overrideOnclickBehavior
-          ? () => overrideOnclickBehavior(nft!)
-          : () =>
-            router.push(
-              `/token/${
-                NFT_COLLECTION.address
-              }/${tokenId.toString()}`
-            )
-      }
+      
     >
       <div className="relative w-full h-64 bg-white/[.04]">
         {nft.metadata.image && (
@@ -76,18 +69,7 @@ export default function NFTComponent({
           </p>
         </div>
 
-        {(directListing || auctionListing) && (
-          <div className="flex flex-col items-end justify-center">
-            <p className="max-w-full mb-1 overflow-hidden font-medium text-ellipsis whitespace-nowrap text-white/60">
-							Price
-            </p>
-            <p className="max-w-full overflow-hidden text-white text-ellipsis whitespace-nowrap">
-              {directListing
-                ? `${directListing?.currencyValuePerToken.displayValue}${directListing?.currencyValuePerToken.symbol}`
-                : `${auctionListing?.minimumBidCurrencyValue.displayValue}${auctionListing?.minimumBidCurrencyValue.symbol}`}
-            </p>
-          </div>
-        )}
+        
       </div>
     </div>
   );

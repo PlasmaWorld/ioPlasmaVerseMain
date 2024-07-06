@@ -1,0 +1,132 @@
+/* Base navbar styles */
+.navContainer {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  background-color: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 1200px; /* Adjust based on your content */
+  padding: 20px;
+}
+
+.navLeft, .navRight, .navMiddle {
+  display: flex;
+  align-items: center;
+  gap: 24px; /* Increased gap for better spacing */
+}
+
+.connectProfile {
+  display: flex;
+  align-items: center;
+  gap: 16px; /* Adjust this gap to control the space between the connect button and the profile link */
+}
+
+.dropdown {
+  position: relative; /* This is the reference for the absolutely positioned dropdownContent */
+}
+
+.dropdownContent {
+  position: absolute;
+  top: 100%; /* Positions the dropdown right below the dropdown trigger */
+  left: 0;
+  background-color: rgba(255, 255, 255, 0.04);
+  border: 1px solid #f5f2f2; /* Adds a slight border to the dropdown */
+  border-radius: 8px; /* Optional: rounds the corners */
+  box-shadow: 0 8px 16px rgba(0,0,0,0.2); /* Optional: adds some shadow for better visibility */
+  z-index: 1000; /* Ensures the dropdown is above other content */
+  display: none; /* Initially hides the dropdown content */
+}
+
+.dropdown:hover .dropdownContent {
+  display: block; /* Shows the dropdown content on hover */
+}
+
+.navMiddle {
+  flex-grow: 1;
+  justify-content: center;
+}
+
+.link, .homeLink {
+  color: rgba(193, 190, 31, 0.8);
+  font-size: 16px;
+  font-weight: 600;
+  transition: color 0.3s, transform 0.3s;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 8px 12px; /* Added padding for a better button feel */
+  border-radius: 4px; /* Rounded corners for a modern look */
+}
+
+.link:hover, .homeLink:hover {
+  color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px); /* Subtle lift effect on hover */
+}
+
+.profileImageContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden; /* Ensures the image maintains its aspect ratio */
+  border-radius: 50%;
+  width: 42px;
+  height: 42px;
+}
+
+.profileImageContainer img {
+  transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+  display: block;
+  width: 100%; /* Ensures image covers the container */
+  height: auto;
+}
+
+.profileImageContainer:hover img {
+  opacity: 0.8;
+  transform: scale(1.05); /* Slight zoom effect on hover */
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .navMiddle {
+    display: none;
+  }
+
+  .navRight {
+    display: flex;
+    gap: 16px;
+  }
+
+  .burgerMenu {
+    display: block;
+  }
+}
+
+@media (max-width: 500px) {
+  .navConnect {
+    display: none; /* Hide specific elements on very small screens */
+  }
+}
+
+.drawerOpened .link {
+  display: block;
+  padding: 10px 20px; /* Increased padding for touch targets in the drawer */
+  width: 100%;
+  text-align: left; /* Aligns text to the left inside the drawer */
+}

@@ -1,0 +1,104 @@
+.profileHeader {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+.coverImage {
+  width: 100%;
+  height: auto;
+  max-height: 450px;
+  border-radius: 16px;
+  object-fit: cover;
+}
+
+.profilePicture {
+  width: 132px;
+  height: 132px;
+  border-radius: 50%;
+  vertical-align: inherit;
+  outline: 3px solid rgba(255, 255, 255, 0.1);
+  margin-top: -72px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media (max-width: 768px) {
+  .coverImage {
+    max-height: 200px;
+  }
+  .profilePicture {
+    width: 80px;
+    height: 80px;
+    margin-top: -40px;
+  }
+  .tabs {
+    flex-direction: column;
+  }
+  .tab {
+    width: 100%;
+    text-align: center;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.6);
+  }
+}
+
+.flexContainer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.tabs {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.6);
+  margin-top: 16px;
+  margin-bottom: 16px;
+}
+
+.tab {
+  padding: 16px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #FFFFFF; 
+  cursor: pointer;
+  transition: color 0.1s ease-in-out;
+}
+
+.tab:hover {
+  color: #FFFFFF; 
+}
+
+.activeTab {
+  color: #FFFFFF; 
+  border-bottom: 2px solid #0294fe;
+  color: #0294fe;
+}
+
+.tabContent, .activeTabContent {
+  color: #FFFFFF; 
+  padding: 20px 0;
+}
+
+.tabContent {
+  display: none;
+}
+
+.activeTabContent {
+  display: block;
+  overflow-y: auto; /* Allows scrolling */
+  max-height: 80vh; /* Limits the height to 80% of the viewport height */
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .flexContainer {
+    flex-direction: column;
+    align-items: center;
+  }
+}

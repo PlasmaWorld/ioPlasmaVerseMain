@@ -1,0 +1,82 @@
+/* NewsModal.module.css */
+.modalOverlay {
+  position: overlay;
+ 
+  
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modalWrapper {
+  background: rgba(78, 108, 198, 0.808);
+  border-radius: 8px;
+  overflow: hidden;
+  width: 90%;
+  max-width: 800px;
+  max-height: 90%; /* Ensure the modal doesn't exceed the viewport height */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.modalContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  overflow-y: auto; /* Enable vertical scrolling */
+  max-height: 100%; /* Ensure the content doesn't exceed the modal height */
+}
+
+.modalImage {
+  width: 30%;
+  height: auto;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.modalText {
+  text-align: center;
+}
+
+.modalTitle {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.modalDescription {
+  font-size: 16px;
+  margin-bottom: 20px;
+}
+
+.articleContainer {
+  max-height: 50vh; /* Limit the height of the articles container */
+  overflow-y: auto; /* Enable vertical scrolling for articles */
+  width: 100%;
+}
+
+.articleCard {
+  background: #f9f9f9;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.articleTitle {
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.articleDate {
+  font-size: 14px;
+  color: gray;
+  margin-bottom: 10px;
+}
+
+.articleContent {
+  font-size: 16px;
+}

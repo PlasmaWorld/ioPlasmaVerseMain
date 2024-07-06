@@ -1,0 +1,95 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  padding-top: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+  z-index: 1100; /* Higher z-index to overlay the navbar */
+}
+
+.statText {
+  color: white;
+}
+
+.cardContainer {
+  position: relative;
+  background-color: rgba(255, 255, 255, 0.04);
+  border-radius: 0.5rem; /* md radius */
+  padding: 2rem; /* xl padding */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06); /* Tailwind's 'sm' shadow */
+  width: 90%;
+  max-width: 500px;
+  overflow-y: auto;
+  z-index: 1100;
+}
+
+.card {
+  position: relative;
+  background-color: #2d3748;
+  padding-top: 20px; /* Ensure enough space for the profile image */
+
+}
+
+.profilePictureWrapper {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 10px; /* Adjust this to prevent cutting off */
+}
+
+.profilePicture {
+  border-radius: 50%;
+  width: 80px;
+  height: 80px;
+  border: 3px solid white; /* White border around profile image */
+}
+
+.modal {
+  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+}
+
+.modalContent {
+  background-color: white;
+  border-radius: 0.5rem; /* md radius */
+  padding: 2rem; /* xl padding */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06); /* Tailwind's 'sm' shadow */
+  max-width: 90%; /* Responsive width */
+  margin: auto;
+}
+
+.buttonClose {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  font-size: 1.5rem;
+  color: #4a5568; /* gray-600 */
+  cursor: pointer;
+  transition: color 0.3s;
+}
+
+.buttonClose:hover {
+  color: #2d3748; /* gray-800 */
+}
+
+@media (max-width: 640px) {
+  .cardContainer {
+    max-width: 90%;
+    padding: 1rem; /* Adjust padding for mobile */
+  }
+
+  .group {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .nftCard{
+    padding-top: 120;
+  }
+
+  .group > div {
+    margin-bottom: 12px;
+  }
+}

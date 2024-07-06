@@ -1,0 +1,115 @@
+/* Social.module.css */
+.socialPostCreator {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Add this line to center children horizontally */
+  justify-content: center; /* Add this if you want to vertically center the content if there's enough space */
+  background-color: #2f0c0c15;
+  border-radius: 10px;
+  box-shadow: 0 2px 12px rgb(244, 242, 242);
+  padding: 20px;
+  margin: 20px auto; /* Adjust margin to 'auto' for horizontal centering within its parent */
+  max-width: 600px;
+}
+
+.nftPreview {
+  width: 100%;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  object-fit: cover;
+  height: auto;
+  max-height: 300px; /* Adjust to control image preview size */
+}
+
+.fileInputContainer {
+  margin: 10px 0;
+  position: relative;
+  text-align: center;
+}
+
+.fileInputLabel {
+  display: inline-block;
+  background-color: #007bff;
+  color: #fff;
+  padding: 8px 20px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.3s;
+}
+
+.fileInputLabel:hover {
+  background-color: #0056b3;
+}
+
+.fileInput {
+  visibility: hidden;
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.textareaInput {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 15px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  resize: vertical;
+  min-height: 100px;
+  font-family: 'Helvetica', 'Arial', sans-serif;
+}
+
+.emojiToggle {
+  font-size: 24px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  color: #007bff;
+  padding: 5px;
+  margin-bottom: 10px;
+  align-self: flex-end;
+}
+
+.emojiPicker {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  z-index: 100;
+  border: 1px solid #ccc; /* Custom border color */
+  border-radius: 8px; /* Rounded corners */
+  overflow: hidden; /* Ensures the content does not overflow the rounded corners */
+}
+
+/* Additional customizations for responsive layouts */
+@media (max-width: 768px) {
+  .emojiPicker {
+      right: 50%;
+      transform: translateX(50%);
+      max-width: 300px; /* Limit width on smaller screens */
+  }
+}
+
+.mintButton {
+  background-color: #28a745;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: 500;
+  text-transform: uppercase;
+  transition: background-color 0.3s;
+}
+
+.mintButton:hover {
+  background-color: #218838;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .socialPostCreator {
+    width: 90%;
+    margin: 20px auto;
+  }
+}

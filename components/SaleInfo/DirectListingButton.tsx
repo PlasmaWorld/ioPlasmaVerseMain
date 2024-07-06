@@ -1,27 +1,49 @@
 "use client";
+
 import { useRouter } from "next/navigation";
-import { NFT as NFTType } from "thirdweb";
-import { TransactionButton } from "thirdweb/react";
+import { NFT as NFTType, getContract } from "thirdweb";
+import { TransactionButton, useActiveAccount } from "thirdweb/react";
 import { createListing } from "thirdweb/extensions/marketplace";
 import toast from "react-hot-toast";
-import { MARKETPLACE, NFT_COLLECTION } from "@/const/contracts";
+import { MARKETPLACE, NETWORK } from "@/const/contracts";
 import toastStyle from "@/util/toastConfig";
-import { revalidatePath } from "next/cache";
+import client from "@/lib/client";
+import { isApprovedForAll, setApprovalForAll } from "thirdweb/extensions/erc721";
 
 export default function DirectListingButton({
-	nft,
-	pricePerToken,
+  nft,
+  pricePerToken,
+  listingStart,
+  listingEnd,
+  contractAddress,
+  refetchAllListings
+  
 }: {
-	nft: NFTType;
-	pricePerToken: string;
+  nft: NFTType;
+  pricePerToken: string;
+  listingStart: string;
+  listingEnd: string;
+  contractAddress: string;
+  refetchAllListings: () => void;
+
 }) {
 	const router = useRouter();
+
+	const address =
+    contractAddress.startsWith("0x") && contractAddress.length === 42
+      ? (contractAddress as `0x${string}`)
+      : null;
+
+
+	if (!address) {
+		return null;
+	  }
 	return (
 		<TransactionButton
 			transaction={() => {
 				return createListing({
 					contract: MARKETPLACE,
-					assetContractAddress: NFT_COLLECTION.address,
+					assetContractAddress: address,
 					tokenId: nft.id,
 					pricePerToken,
 				});
@@ -41,16 +63,16 @@ export default function DirectListingButton({
 					position: "bottom-center",
 				});
 			}}
-			onTransactionConfirmed={(txResult) => {
+			onTransactionConfirmed={async (txResult) => {
 				toast("Listed Successfully!", {
 					icon: "🥳",
 					id: "direct",
 					style: toastStyle,
 					position: "bottom-center",
 				});
-				router.push(
-					`/token/${NFT_COLLECTION.address}/${nft.id.toString()}`
-				);
+				await refetchAllListings();
+        router.refresh();
+
 			}}
 		>
 			List for Sale
