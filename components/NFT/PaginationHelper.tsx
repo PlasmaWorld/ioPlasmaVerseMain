@@ -22,6 +22,7 @@ const defaultTotalSupplies: Record<string, number> = {
   '0xDFBbEbA6D17b0d49861aB7f26CdA495046314370': 1000,
   '0xAf1B5063A152550aebc8d6cB0dA6936288EAb3dc': 347,
   '0x0c5AB026d74C451376A4798342a685a0e99a5bEe': 10000,
+  '0xce300b00aa9c066786D609Fc96529DBedAa30B76': 10000,
 };
 
 interface ContractData {

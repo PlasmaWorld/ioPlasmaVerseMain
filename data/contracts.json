@@ -1,0 +1,44 @@
+[
+  {
+    "deployerAddress": "0x9c10c87C4db9277F5f912165c7AC72e47a18ef3e",
+    "contractAddress": "0xFd339df5f969faed3B365D7B63d59B0A7d4439e4",
+    "chain": {
+      "id": 4689,
+      "rpc": "https://4689.rpc.thirdweb.com"
+    },
+    "chainId": 4689,
+    "title": "test",
+    "description": "test",
+    "thumbnailUrl": null,
+    "explorer": "https://iotexscan.io/token-nft/0xFd339df5f969faed3B365D7B63d59B0A7d4439e4#token_transfer",
+    "type": "DropERC20",
+    "typeBase": "ERC20",
+    "social_urls": {
+      "telegram": "",
+      "discord": "",
+      "x": "",
+      "website": ""
+    }
+  },
+  {
+    "deployerAddress": "0x9c10c87C4db9277F5f912165c7AC72e47a18ef3e",
+    "contractAddress": "0x04aA051458545f8cE4C66E6872b173a9e90594A4",
+    "chain": {
+      "id": 4689,
+      "rpc": "https://4689.rpc.thirdweb.com"
+    },
+    "chainId": 4689,
+    "title": "test",
+    "description": "test",
+    "thumbnailUrl": null,
+    "explorer": "https://iotexscan.io/token-nft/0x04aA051458545f8cE4C66E6872b173a9e90594A4#token_transfer",
+    "type": "TokenERC721",
+    "typeBase": "ERC20",
+    "social_urls": {
+      "telegram": "",
+      "discord": "",
+      "x": "",
+      "website": ""
+    }
+  }
+]

@@ -1,0 +1,166 @@
+/* Container styles */
+.container {
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    background-color: rgba(255, 255, 255, 0.04);
+    transition: background-color 0.3s ease-in-out;    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 4px 8px rgba(207, 201, 201, 0.764);
+
+    margin-bottom: 20px;
+  }
+  
+  /* Info container styles */
+  .thirdwebInfoContainer {
+    background-color: rgba(255, 255, 255, 0.04);
+    transition: background-color 0.3s ease-in-out;    padding: 20px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(207, 201, 201, 0.764);
+
+    margin-bottom: 20px;
+  }
+  .openModalButton,
+.checkOutButton {
+  padding: 10px 20px;
+  background-color: blue;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-right: 10px;
+}
+  
+  .thirdwebInfoContainer h3 {
+    margin-top: 20px;
+    color: #fdfdfd;
+  }
+  
+  .thirdwebInfoContainer p {
+    color: #fff6f6;
+    line-height: 1.6;
+  }
+  
+  .thirdwebInfoContainer ul {
+    list-style-type: disc;
+    padding-left: 20px;
+    color: #f8f3f3;
+  }
+  
+  /* Contract details styles */
+  .contractDetails {
+    background-color: rgba(255, 255, 255, 0.04);
+    transition: background-color 0.3s ease-in-out;    padding: 20px;
+        padding: 20px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(207, 201, 201, 0.764);
+
+    margin-bottom: 20px;
+  }
+  
+  .contractDetails h3 {
+    margin-top: 20px;
+    color: #fff9f9;
+  }
+  
+  .contractDetails p {
+    color: #fff9f9;
+    line-height: 1.6;
+  }
+  
+  .contractDetails ul {
+    list-style-type: none;
+    padding-left: 0;
+  }
+  
+  .contractDetails ul li {
+    margin: 10px 0;
+  }
+  
+  .contractDetails ul li a {
+    color: #fafafa;
+    text-decoration: none;
+  }
+  
+  .contractDetails ul li a:hover {
+    text-decoration: underline;
+  }
+  
+  /* Button container styles */
+  .buttonContainer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  
+  .buttonContainer button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    background-color: #1a73e8;
+    color: #ffffff;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .buttonContainer button:hover {
+    background-color: #1765cc;
+  }
+  
+  /* Social icons */
+  .socials {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+  }
+  
+  .socials a {
+    color: #555555;
+    font-size: 1.2em;
+    transition: color 0.3s ease;
+  }
+  
+  .socials a:hover {
+    color: #1a73e8;
+  }
+  
+  /* Explorer, mint, claim, and contract data sections */
+  .explorer,
+  .mint,
+  .claim,
+  .contractData {
+    margin-top: 20px;
+    padding: 20px;
+    background-color: rgba(255, 255, 255, 0.04);
+    transition: background-color 0.3s ease-in-out;    padding: 20px;
+        border: 1px solid #d1d5db;
+    border-radius: 8px;
+  }
+  
+  /* Responsive design */
+  @media (max-width: 768px) {
+    .container {
+      padding: 15px;
+    }
+  
+    .thirdwebInfoContainer,
+    .contractDetails,
+    .explorer,
+    .mint,
+    .claim,
+    .contractData {
+      padding: 15px;
+    }
+  
+    .buttonContainer {
+      justify-content: center;
+    }
+  
+    .buttonContainer button {
+      flex-grow: 1;
+    }
+  }
+  

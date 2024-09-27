@@ -1,289 +1,156 @@
 "use client";
-
-import React, { useEffect, useState, useMemo } from 'react';
-import { Helmet } from "react-helmet";
-import { Button, Menu } from '@mantine/core';
-import { SearchIcon } from '@/components/Icons/SearchIcon';
-import { SpunksRankingNew } from '@/const/contractabi';
-import useDebounce from '@/const/useDebounce';
-import { PaginationHelper } from '@/components/NFT/PaginationHelper';
-import { PaginationHelperProfile } from '@/components/NFT/PaginationHelperOwned';
-
-import { NFTCard } from '@/components/NFT/NftCardGalerie';
-import Stats from '@/components/NFT/BuyStats';
-import { FaTwitter, FaTelegram, FaLink, FaDiscord, FaGlobe } from 'react-icons/fa';
+import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Button, Menu, Modal } from '@mantine/core';
 import { NFT_CONTRACTS } from '@/const/nft.contracts';
 import { MediaRenderer, useReadContract } from 'thirdweb/react';
 import client from '@/lib/client';
-import { NFTGridLoading } from '@/components/NFT/NFTGrid';
-import { MARKETPLACE } from '@/const/contracts';
-import { getAllValidListings, getAllValidAuctions, getAllValidOffers } from 'thirdweb/extensions/marketplace';
-import { useNfts } from '@/Hooks/NftOwnedProvider';
+import { defineChain, getContract } from 'thirdweb';
+import { getContractMetadata } from 'thirdweb/extensions/common';
+import { ChainList as FullChainList } from '@/const/ChainList';
 
-type NFTContract = typeof NFT_CONTRACTS[number];
+// Define a simple Chain interface
+interface Chain {
+  name: string;
+  chainId: number;
+}
 
-const PlasmaWorld: React.FC = () => {
-  const nftsPerPage = 20;
-  const [isSearching, setIsSearching] = useState(false);
-  const [activeContract, setActiveContract] = useState<NFTContract | null>(NFT_CONTRACTS[0]);
-  const [page, setPage] = useState(1);
-  const [search, setSearch] = useState<string>("");
-  const debouncedSearchTerm = useDebounce(search, 500);
-  const [isLoading, setIsLoading] = useState(false);
-  const [detailedView, setDetailedView] = useState(false);
-  const [searchedId, setSearchedId] = useState<number | null>(null);
-  const [showOwned, setShowOwned] = useState(false); // State to toggle owned NFTs
+// Extract only name and chainId
+const extractChainList = (): Chain[] => {
+  return FullChainList.map(chain => ({
+    name: chain.name,
+    chainId: chain.chainId
+  }));
+}
 
-  const [ownedPage, setOwnedPage] = useState(1); // State for owned NFTs pagination
+// Get the simplified chain list
+const ChainList: Chain[] = extractChainList();
 
-  const { ownedNfts3 } = useNfts(); // Get the owned NFTs from the context
+// Define a default chainId
+const DEFAULT_CHAIN_ID = 4689; // You can set this to any default chainId you prefer
 
-  const {
-    data: allValidListings,
-    isLoading: isLoadingValidListings,
-    refetch: refetchAllListings,
-  } = useReadContract(getAllValidListings, {
-    contract: MARKETPLACE,
+interface FetchedContract {
+  address: string;
+  name: string;
+}
+
+const NftCollection: React.FC = () => {
+  const router = useRouter();
+  const [searchInput, setSearchInput] = useState<string>("");
+  const [contractAddress, setContractAddress] = useState<string>("");
+  const [modalOpened, setModalOpened] = useState<boolean>(false);
+  const [selectedChain, setSelectedChain] = useState<Chain | null>(null);
+  const [fetchedContract, setFetchedContract] = useState<FetchedContract | null>(null);
+  const [filterInput, setFilterInput] = useState<string>("");
+
+  // Use selectedChain or default to DEFAULT_CHAIN_ID
+  const NETWORK = defineChain(selectedChain ? selectedChain.chainId : DEFAULT_CHAIN_ID);
+
+  const contract = getContract({
+    address: contractAddress,
+    client,
+    chain: NETWORK,
   });
 
   const {
-    data: allValidAuctions,
-    isLoading: isLoadingValidAuctions,
-    refetch: refetchAllAuctions,
-  } = useReadContract(getAllValidAuctions, {
-    contract: MARKETPLACE,
-  });
-
-  const {
-    data: allValidOffers,
-    isLoading: isLoadingValidOffers,
-    refetch: refetchAllOffers,
-  } = useReadContract(getAllValidOffers, {
-    contract: MARKETPLACE,
+    data: contractMetadata,
+    isLoading: isContractMetadataLoading,
+    refetch: refetchContractMetadata,
+  } = useReadContract(getContractMetadata, {
+    contract: contract,
   });
 
   useEffect(() => {
-    const fetchData = async () => {
-      await refetchAllListings();
-      await refetchAllAuctions();
-      await refetchAllOffers();
-    };
-    fetchData();
-  }, [refetchAllListings, refetchAllAuctions, refetchAllOffers]);
+    if (contractMetadata && contractAddress && selectedChain) {
+      setFetchedContract({
+        address: contractAddress,
+        name: contractMetadata.name,
+      });
 
-  const tokenIds = useMemo(() => {
-    return Array.from(
-      new Set([
-        ...allValidListings?.filter((l) => l.assetContractAddress).map((l) => l.tokenId) ?? [],
-        ...allValidAuctions?.filter((a) => a.assetContractAddress).map((a) => a.tokenId) ?? [],
-        ...allValidOffers?.filter((a) => a.assetContractAddress).map((a) => a.tokenId) ?? [],
-      ])
-    );
-  }, [allValidListings, allValidAuctions, allValidOffers]);
+      // Redirect to the new page with the fetched contract address
+    }
+  }, [contractMetadata, contractAddress, selectedChain, router]);
 
-  const nftData = useMemo(() => {
-    return tokenIds.map((tokenId) => {
-      const directListings = allValidListings?.filter((listing) => listing.tokenId === tokenId) ?? [];
-      const auctionListings = allValidAuctions?.filter((listing) => listing.tokenId === tokenId) ?? [];
-      const directOffers = allValidOffers?.filter((offer) => offer.tokenId === tokenId) ?? [];
+  const handleSearchwithChain = () => {
+    if (!selectedChain || !contractAddress) return;
 
-      return {
-        tokenId: tokenId,
-        listing: [...directListings, ...auctionListings],
-        offers: directOffers,
-      };
-    });
-  }, [tokenIds, allValidListings, allValidAuctions, allValidOffers]);
-
-  const handleTabClick = (contract: NFTContract) => {
-    setActiveContract(contract);
-    setDetailedView(true);
-    window.scrollTo(0, 0);
+    router.push(`/NftGalerie/${selectedChain.chainId}/${contractAddress}`);
   };
 
-  const handleThumbnailClick = (contract: NFTContract) => {
-    setActiveContract(contract);
-    setDetailedView(true);
-    window.scrollTo(0, 0);
-  };
-
-  const currentIds = useMemo(() => {
-    if (activeContract?.title === "Spunks") {
-      return SpunksRankingNew.slice((page - 1) * nftsPerPage, page * nftsPerPage).map(item => item.spunk);
-    } else {
-      const startId = (page - 1) * nftsPerPage + 1;
-      return Array.from({ length: nftsPerPage }, (_, i) => startId + i);
-    }
-  }, [page, nftsPerPage, activeContract]);
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    if (/^\d+$/.test(value)) {
-      setSearch(value);
-    } else {
-      setSearch("");
-    }
-  };
-
-  useEffect(() => {
-    if (debouncedSearchTerm) {
-      const id = parseInt(debouncedSearchTerm, 10);
-      if (!isNaN(id)) {
-        setSearchedId(id);
-      } else {
-        setSearchedId(null);
-      }
-    } else {
-      setSearchedId(null);
-    }
-  }, [debouncedSearchTerm]);
-
-  useEffect(() => {
-    setIsSearching(!!searchedId);
-  }, [searchedId]);
-
-  const ownedTokenIds = useMemo(() => {
-    if (activeContract) {
-      return ownedNfts3[activeContract.address] || [];
-    }
-    return [];
-  }, [activeContract, ownedNfts3]);
-
-  // Calculate paginated owned NFTs
-  const paginatedOwnedTokenIds = useMemo(() => {
-    const start = (ownedPage - 1) * nftsPerPage;
-    return ownedTokenIds.slice(start, start + nftsPerPage);
-  }, [ownedPage, ownedTokenIds, nftsPerPage]);
+  const filteredChains = ChainList.filter(chain =>
+    chain.chainId.toString().startsWith(filterInput)
+  );
 
   return (
-    <div className="m-0 p-10 font-inter text-neutral-200">
-      <Helmet>
-        <title>NftGallery - {activeContract?.title}</title>
-      </Helmet>
+    <div className="m-0 font-inter text-neutral-200">
       <div className="flex justify-center gap-2 my-4" style={{ marginTop: '100px' }}>
-        <Menu trigger="click" control={<Button>Choose Collection</Button>}>
-          {NFT_CONTRACTS.map((contract, index) => (
-            <Menu.Item key={index} onClick={() => handleTabClick(contract)}>
-              <div className="flex items-center">
-                {contract.title}
-              </div>
-            </Menu.Item>
-          ))}
-        </Menu>
-        <Button onClick={() => setShowOwned(prev => !prev)}>
-          {showOwned ? 'Show All NFTs' : 'Show Owned NFTs'}
-        </Button>
+      </div>
+      <h2>Search for Nft collection from any EVM chain</h2>
+      <div className="flex justify-center gap-2 my-4">
+        <Button onClick={() => setModalOpened(true)}>Select Chain</Button>
+        <input
+          type="text"
+          placeholder="Enter Contract Address"
+          value={contractAddress}
+          onChange={(e) => setContractAddress(e.target.value)}
+          className="p-2 border rounded-lg"
+        />
+        <Button onClick={handleSearchwithChain}>Search by Chain</Button>
+      </div>
+      <div className="flex justify-center gap-2 my-4">
+        {selectedChain && (
+          <div>
+            <p>Selected Chain: {selectedChain.name}</p>
+          </div>
+        )}
+        {fetchedContract && (
+          <div>
+            <p>Address: {fetchedContract.address}</p>
+            <p>Name: {fetchedContract.name}</p>
+          </div>
+        )}
       </div>
       <div className="m-0 p-0 font-inter text-neutral-200">
-        {!detailedView ? (
-          <div className="thumbnails grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {NFT_CONTRACTS.map((contract, index) => (
-              <div key={index} className="thumbnail border rounded-lg p-4" onClick={() => handleThumbnailClick(contract)}>
-                <MediaRenderer src={contract.thumbnailUrl} client={client} className="object-cover object-center w-full h-48" />
-                <h3 className="mt-2 text-center">{contract.title}</h3>
+        <div className="thumbnails grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {NFT_CONTRACTS.map((contract, index) => (
+            <div key={index} className="thumbnail border rounded-lg p-4" onClick={() => router.push(`/NftGalerie/${contract.chainId}/${contract.address}`)}>
+              <MediaRenderer src={contract.thumbnailUrl} client={client} className="object-cover object-center w-full h-48" />
+              <h3 className="mt-2 text-center">{contract.title}</h3>
+            </div>
+          ))}
+        </div>
+      </div>
+      <Modal
+        opened={modalOpened}
+        onClose={() => setModalOpened(false)}
+        title="Select Chain"
+        styles={{ modal: { marginTop: '50px' } }} // Inline styles for padding from the top
+      >
+        <div className="p-4">
+          <input
+            type="text"
+            placeholder="Enter Chain ID"
+            value={filterInput}
+            onChange={(e) => setFilterInput(e.target.value)}
+            className="p-2 border rounded-lg mb-4 w-full"
+          />
+          <div className="chain-list-container" style={{ maxHeight: '200px', overflowY: 'scroll' }}>
+            {filteredChains.map((chain, index) => (
+              <div key={index} className="chain-item border rounded-lg p-2 mb-2" onClick={() => {
+                setSelectedChain(chain);
+                setModalOpened(false);
+              }}>
+                <div className="flex justify-between">
+                  <span>{chain.name}</span>
+                  <span>{chain.chainId}</span>
+                </div>
               </div>
             ))}
           </div>
-        ) : (
-          <div className="details">
-            {activeContract && (
-              <>
-                <h1>{activeContract.title}</h1>
-                <MediaRenderer src={activeContract.thumbnailUrl} client={client} className="object-cover object-center w-full h-96" />
-                <div className="socials flex justify-center mt-4">
-                  {activeContract.twitter && activeContract.twitter !== "" && (
-                    <a href={activeContract.twitter} target="_blank" rel="noopener noreferrer" className="mx-2">
-                      <FaTwitter />
-                    </a>
-                  )}
-                  {activeContract.telegram && activeContract.telegram !== "" && (
-                    <a href={activeContract.telegram} target="_blank" rel="noopener noreferrer" className="mx-2">
-                      <FaTelegram />
-                    </a>
-                  )}
-                  {activeContract.explorer && activeContract.explorer !== "" && (
-                    <a href={activeContract.explorer} target="_blank" rel="noopener noreferrer" className="mx-2">
-                      <FaLink />
-                    </a>
-                  )}
-                  {activeContract.website && activeContract.website !== "" && (
-                    <a href={activeContract.website} target="_blank" rel="noopener noreferrer" className="mx-2">
-                      <FaGlobe />
-                    </a>
-                  )}
-                  {activeContract.discord && activeContract.discord !== "" && (
-                    <a href={activeContract.discord} target="_blank" rel="noopener noreferrer" className="mx-2">
-                      <FaDiscord />
-                    </a>
-                  )}
-                </div>
-                <p className="mt-4">{activeContract.description}</p>
-                <Stats contractAddress={activeContract.address} />
-                <button onClick={() => setDetailedView(false)} className="mt-4 px-4 py-2 bg-blue-500 text-white rounded">Back to gallery</button>
-              </>
-            )}
-          </div>
-        )}
-        {detailedView && (
-          <div className="z-20 mx-auto flex min-h-screen w-full flex-col px-4">
-            <div className="mx-auto mb-8 flex h-12 w-96 max-w-full items-center rounded-lg border border-white/10 bg-white/5 px-4 text-xl text-white">
-              <SearchIcon />
-              <input
-                type="text"
-                onChange={handleInputChange}
-                placeholder="Search by ID"
-                className="w-full bg-transparent px-4 text-white focus:outline-none"
-              />
-            </div>
-            {activeContract?.address && searchedId ? (
-              <div className="flex justify-center">
-                <NFTCard
-                  key={searchedId}
-                  tokenId={BigInt(searchedId)}
-                  contractAddresse={activeContract.address}
-                  nft={nftData.find(nft => nft.tokenId === BigInt(searchedId)) || null}
-                  refetchAllAuctions={refetchAllAuctions}
-                  refetchAllListings={refetchAllListings}
-                  refetchAllOffers={refetchAllOffers}
-                />
-              </div>
-            ) : null}
-
-            {isLoading ? (
-              <div className="mx-auto flex flex-wrap items-center justify-center gap-8">
-                {Array.from({ length: nftsPerPage }).map((_, i) => (
-                  <div className="!h-60 !w-60 animate-pulse rounded-lg bg-gray-800" key={i} />
-                ))}
-              </div>
-            ) : (
-              <div className="flex flex-wrap items-center justify-center gap-8">
-                {(showOwned ? paginatedOwnedTokenIds : currentIds).map(id => (
-                  activeContract?.address && (
-                    <NFTCard
-                      key={id}
-                      tokenId={BigInt(id)}
-                      contractAddresse={activeContract.address}
-                      nft={nftData.find(nft => nft.tokenId === BigInt(id)) || null}
-                      refetchAllAuctions={refetchAllAuctions}
-                      refetchAllListings={refetchAllListings}
-                      refetchAllOffers={refetchAllOffers}
-                    />
-                  )
-                ))}
-              </div>
-            )}
-            <div>
-              {activeContract?.address && (showOwned ? (
-                <PaginationHelperProfile contractAddress={activeContract.address} setPage={setOwnedPage} totalItems={ownedTokenIds.length} itemsPerPage={nftsPerPage} />
-              ) : (
-                <PaginationHelper contractAddress={activeContract.address} setPage={setPage} />
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
+        </div>
+      </Modal>
     </div>
   );
 };
 
-export default PlasmaWorld;
+export default NftCollection;

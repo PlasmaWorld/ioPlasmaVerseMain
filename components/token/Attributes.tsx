@@ -105,8 +105,8 @@ export const NftAttributes: FC<INFTCardProps> = ({ nft, contractAddress }) => {
   const [attributes, setAttributes] = useState<Attribute[]>([]);
 
   useEffect(() => {
-    if (nft && nft.metadata && Array.isArray(nft.metadata.attributes)) {
-      const formattedAttributes = nft.metadata.attributes.reduce((acc: Attribute[], attr: { trait_type: any; value: any; frequency?: string; count?: number; }) => {
+    if (nft  && Array.isArray(nft.attributes)) {
+      const formattedAttributes = nft.attributes.reduce((acc: Attribute[], attr: { trait_type: any; value: any; frequency?: string; count?: number; }) => {
         if (
           typeof attr.trait_type === 'string' &&
           (typeof attr.value === 'string' || typeof attr.value === 'number')

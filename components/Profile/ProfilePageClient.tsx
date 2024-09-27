@@ -2,12 +2,12 @@ import React, { FC, useEffect, useState, useCallback, useMemo, Suspense } from "
 import { Container, Group, Skeleton } from "@mantine/core";
 import { MediaRenderer, useActiveAccount, useReadContract } from "thirdweb/react";
 import { AppMint, BuzzBotsContract, ChattApp, IotexPunksContract, LoxodromeContract, MARKETPLACE, MachinFiContract, MimoAlbieContract, MimoBimbyContract, MimoGizyContract, MimoPipiContract, MimoSpaceContract, RobotAiContract, SpunksContract, SumoContractContract, WebStreamContract, XSumoContract } from "@/const/contracts";
-import { ThirdwebContract, readContract, resolveMethod } from "thirdweb";
+import { Address, ThirdwebContract, readContract, resolveMethod } from "thirdweb";
 import client from "@/lib/client";
 import ModalCreateAccount from "../AccountGroup/createAccount";
 import Modal from "../ProfileImageUploader/modalbackround";
 import Image from "next/image";
-import { getAllValidListings, getAllValidAuctions, getAllValidOffers, DirectListing, EnglishAuction, Offer } from "thirdweb/extensions/marketplace";
+import { getAllValidListings, getAllValidAuctions, getAllValidOffers, Offer } from "thirdweb/extensions/marketplace";
 import NewModal from "../ProfileImageUploader/modalprofil";
 import NFTGridProfile from "../NFT/NftGridProfile";
 import toastStyle from "@/util/toastConfig";
@@ -22,6 +22,42 @@ import { BigNumber } from "ethers";
 import StoryGrid from "../AccountGroup/StoryGrid";
 import { useNfts } from "@/Hooks/NftOwnedProvider";
 import NFTGridOwne from "../NFT/NftGridImages";
+import { ListingStatus } from "@/customDirectListing/DirectListingListingStatis";
+import { useMarketplaceData } from "@/Hooks/MarketProvider";
+import { NFTCard } from "../NFT/NftCardMarketplace";
+
+interface EnglishAuction  {
+  id: bigint;
+  creatorAddress: Address;
+  assetContractAddress: Address;
+  tokenId: bigint;
+  quantity: bigint;
+  currencyContractAddress: Address;
+  minimumBidAmount: bigint;
+  minimumBidCurrencyValue: string; // GetBalanceResult
+  buyoutBidAmount: bigint;
+  buyoutCurrencyValue: string; // GetBalanceResult 
+  timeBufferInSeconds: bigint;
+  bidBufferBps: bigint;
+  startTimeInSeconds: bigint;
+  endTimeInSeconds: bigint;
+  status: ListingStatus;
+};
+
+interface DirectListing {
+  id: bigint;
+  creatorAddress: Address;
+  assetContractAddress: Address;
+  tokenId: bigint;
+  quantity: bigint;
+  currencyContractAddress: Address;
+  currencySymbol: string;
+  pricePerToken: string;
+  startTimeInSeconds: bigint;
+  endTimeInSeconds: bigint;
+  isReservedListing: boolean;
+  status: number;
+}
 
 const [randomColor1, randomColor2, randomColor3, randomColor4] = [
   randomColor(),
@@ -51,11 +87,17 @@ const fetchIPFSData = async (ipfsUrl: string) => {
   return await response.json();
 };
 
-interface NFTData {
+type NFTData = {
   tokenId: bigint;
-  listing: (DirectListing | EnglishAuction)[];
-  offers: Offer[];
-}
+  contractAddress: `0x${string}`;
+  listing?: DirectListing;
+};
+
+type NFTDataAuction = {
+  tokenId: bigint;
+  contractAddress: `0x${string}`;
+  auction?: EnglishAuction;
+};
 
 const ProfilePageClient: React.FC<ProfilePageClientProps> = ({
   profileAddress,
@@ -77,7 +119,6 @@ const ProfilePageClient: React.FC<ProfilePageClientProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [nftImageUrl, setNftImageUrl] = useState<string>("");
   const { ownedNfts2, ownedNfts3 } = useNfts();
-  const [nftData, setNftData] = useState<NFTData[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [ProfileModalOpen, setProfileModalOpen] = useState(false);
   const [signerAddress, setSignerAddress] = useState<string | undefined>(undefined);
@@ -85,9 +126,48 @@ const ProfilePageClient: React.FC<ProfilePageClientProps> = ({
   const account = useActiveAccount();
   console.log("Profile Address:", profileAddress);
   const [attributes, setAttributes] = useState<Record<string, any> | undefined>(undefined);
+  const [nftData, setNftData] = useState<NFTData[]>([]);
+  const [NftDataAuction, setNftDataAuction] = useState<NFTDataAuction[]>([]);
+
+  const [activeTab, setActiveTab] = useState<'listings' | 'auctions'>('listings');
+
+  const { validListings, validAuctions } = useMarketplaceData();
 
 
+  const fetchNFTData = useCallback(async (tokenId: string) => {
+    if (tokenId) {
+        console.log("Fetching NFT data started for tokenId:", tokenId);
+        try {
+            const contract = ChattApp;
 
+            // Fetch contract metadata
+            const contractMetadata = await getContractMetadata({ contract });
+            const contractName = contractMetadata.name;
+            console.log("Contract Name:", contractName);
+
+            // Fetch NFT data
+            const nftData = await getNFT({
+                contract,
+                tokenId: BigInt(tokenId),
+                includeOwner: true,
+            });
+
+            console.log("Fetched NFT data:", nftData);
+
+            if (nftData && nftData.metadata) {
+                const metadata = nftData.metadata as any;
+                if (metadata.attributes) {
+                    setAttributes(metadata.attributes);
+                    console.log("NFT attributes:", metadata.attributes);
+                } else {
+                    console.log("No attributes found in metadata.");
+                }
+            }
+        } catch (error) {
+            console.error("Error fetching NFT:", error);
+        }
+    }
+}, []);
   // Get the contract
   const fetchUserInfo = useCallback(async (signerAddress: string | undefined, contract: ThirdwebContract) => {
       if (!signerAddress) return;
@@ -120,118 +200,47 @@ const ProfilePageClient: React.FC<ProfilePageClientProps> = ({
       } finally {
           setIsLoading(false);    
       }
-  }, []);
+  }, [fetchNFTData]);
 
   
-  const fetchNFTData = useCallback(async (tokenId: string) => {
-      if (tokenId) {
-          console.log("Fetching NFT data started for tokenId:", tokenId);
-          try {
-              const contract = ChattApp;
-
-              // Fetch contract metadata
-              const contractMetadata = await getContractMetadata({ contract });
-              const contractName = contractMetadata.name;
-              console.log("Contract Name:", contractName);
-
-              // Fetch NFT data
-              const nftData = await getNFT({
-                  contract,
-                  tokenId: BigInt(tokenId),
-                  includeOwner: true,
-              });
-
-              console.log("Fetched NFT data:", nftData);
-
-              if (nftData && nftData.metadata) {
-                  const metadata = nftData.metadata as any;
-                  if (metadata.attributes) {
-                      setAttributes(metadata.attributes);
-                      console.log("NFT attributes:", metadata.attributes);
-                  } else {
-                      console.log("No attributes found in metadata.");
-                  }
-              }
-          } catch (error) {
-              console.error("Error fetching NFT:", error);
-          }
-      }
-  }, []);
+  
 
   useEffect(() => {
       if (profileAddress) {
           const signerAddress = profileAddress;
           fetchUserInfo(signerAddress, ChattApp);
       }
-  }, [profileAddress, fetchUserInfo, ChattApp]);
-  const {
-    data: allValidListings,
-    isLoading: isLoadingValidListings,
-    refetch: refetchAllListings,
-    isRefetching: isRefetchingAllListings,
-  } = useReadContract(getAllValidListings, {
-    contract: MARKETPLACE,
-  });
 
-  const {
-    data: allValidAuctions,
-    isLoading: isLoadingValidAuctions,
-    refetch: refetchAllAuctions,
-    isRefetching: isRefetchingAllAuctions,
-  } = useReadContract(getAllValidAuctions, {
-    contract: MARKETPLACE,
-  });
+  }, [profileAddress, fetchUserInfo]);
+  
 
-  const {
-    data: allValidOffers,
-    isLoading: isLoadingValidOffers,
-    refetch: refetchAllOffers,
-    isRefetching: isRefetchingAllOffers,
-  } = useReadContract(getAllValidOffers, {
-    contract: MARKETPLACE,
-  });
+ 
+
+  
 
   useEffect(() => {
-    if (profileAddress) {
-      setLoading(true);
-      const fetchData = async () => {
-        await refetchAllListings();
-        await refetchAllAuctions();
-        await refetchAllOffers();
+    const fetchData = async () => {
+      const filteredListings = validListings?.filter((listing) => listing.creatorAddress === profileAddress) || [];
+      const filteredAuctions = validAuctions.filter((a) => a.creatorAddress === profileAddress) || [];
 
-        const filteredListings = allValidListings?.filter((listing) => listing.creatorAddress === profileAddress) || [];
-        const filteredAuctions = allValidAuctions?.filter((auction) => auction.creatorAddress === profileAddress) || [];
-        const filteredOffers = allValidOffers?.filter((offer) => offer.tokenId) || [];
+      const listingsData = filteredListings.map(listing => ({
+        tokenId: listing.tokenId,
+        contractAddress: listing.assetContractAddress,
+        listing,
+      }));
 
-        const tokenIds = Array.from(
-          new Set([
-            ...filteredListings.filter((l) => l.assetContractAddress).map((l) => l.tokenId),
-            ...filteredAuctions.filter((a) => a.assetContractAddress).map((a) => a.tokenId),
-            ...filteredOffers.filter((o) => o.assetContractAddress).map((o) => o.tokenId),
-          ])
-        );
+      const auctionsData = filteredAuctions.map(auction => ({
+        tokenId: auction.tokenId,
+        contractAddress: auction.assetContractAddress,
+        auction,
+      }));
+      setNftDataAuction([...auctionsData]);
 
-        const combinedData = tokenIds.map((tokenId) => {
-          const directListings = filteredListings.filter((listing) => listing.tokenId === tokenId);
-          const auctionListings = filteredAuctions.filter((listing) => listing.tokenId === tokenId);
-          const directOffers = filteredOffers.filter((offer) => offer.tokenId === tokenId);
+      setNftData([...listingsData]);
+    };
 
-          return {
-            tokenId: BigInt(tokenId),
-            listing: [...directListings, ...auctionListings],
-            offers: directOffers,
-          };
-        });
-
-        setNftData(combinedData);
-        setLoading(false);
-      };
-      fetchData();
-    }
-  }, [profileAddress, allValidListings, allValidAuctions, allValidOffers, refetchAllListings, refetchAllAuctions, refetchAllOffers]);
-
-  const listingsData = nftData.filter((item) => item.listing.some((listing) => 'assetContractAddress' in listing));
-  const auctionsData = nftData.filter((item) => item.listing.some((listing) => 'minimumBid' in listing));
+    fetchData();
+  }, [validListings, validAuctions]);
   const fetchUsername = useCallback(async (signerAddress: string | undefined, contract: ThirdwebContract) => {
     if (!signerAddress) return;
     setIsLoading(true);
@@ -279,12 +288,13 @@ const ProfilePageClient: React.FC<ProfilePageClientProps> = ({
     } finally {
       setLoading(false);
     }
-  }, [profileAddress]);
+  }, [address]);
 
   useEffect(() => {
     if (profileAddress) {
       setSignerAddress(profileAddress);
       fetchUsername(profileAddress, ChattApp);
+      fetchOwnedNfts("0x0c5AB026d74C451376A4798342a685a0e99a5bEe", SpunksContract);
 
       fetchOwnedNfts("0x0c5AB026d74C451376A4798342a685a0e99a5bEe", MachinFiContract);
       fetchOwnedNfts("0x9756e951dd76e933e34434db4ed38964951e588b", SumoContractContract);
@@ -292,10 +302,8 @@ const ProfilePageClient: React.FC<ProfilePageClientProps> = ({
       fetchOwnedNfts("0x7f8cb1d827f26434da652b4e9bd02c698cc2842a", LoxodromeContract);
       fetchOwnedNfts("0xdfbbeba6d17b0d49861ab7f26cda495046314370", BuzzBotsContract);
       fetchOwnedNfts("0xaf1b5063a152550aebc8d6cb0da6936288eab3dc", RobotAiContract);             
-      fetchOwnedNfts("0xc52121470851d0cba233c963fcbb23f753eb8709", SpunksContract);
-      fetchOwnedNfts("0xce300b00aa9c066786D609Fc96529DBedAa30B76", IotexPunksContract);
     }
-  }, [profileAddress, fetchOwnedNfts]);
+  }, [profileAddress, fetchOwnedNfts,fetchUsername,setSignerAddress]);
 
   const fetchOwnedNfts2 = useCallback(async (
     signerAddress: string | undefined,
@@ -409,6 +417,8 @@ const ProfilePageClient: React.FC<ProfilePageClientProps> = ({
       fetchOwnedNfts3(signerAddress, AppMint, '0x9C023CD4E58466424B7f60B32004c6B9d5596140', 100, 50, 90)
 
       fetchOwnedNfts2(signerAddress, WebStreamContract, '0x8aa9271665e480f0866d2F61FC436B96BF9584AD', 838, 150, 830)
+       .then(() =>  fetchOwnedNfts2(signerAddress, IotexPunksContract,'0xce300b00aa9c066786D609Fc96529DBedAa30B76',10000,150,9990))
+
         .then(() => fetchOwnedNfts2(signerAddress, MimoPipiContract, '0xe1Bb99ed442ce6c6ad3806C3afcbd8f7733841A7', 1000, 150, 990))
         .then(() => fetchOwnedNfts2(signerAddress, MimoAlbieContract, '0x8cfE8bAeE219514bE529407207fCe9C612E705fD', 946, 150, 930))
         .then(() => fetchOwnedNfts2(signerAddress, MimoBimbyContract, '0xaa5314f9ee6a6711e5284508fec7f40e85969ed6', 1000, 150, 990))
@@ -424,22 +434,9 @@ const ProfilePageClient: React.FC<ProfilePageClientProps> = ({
           );
         });
     }
-  }, [profileAddress]);
+  }, [profileAddress,fetchOwnedNfts2,fetchOwnedNfts3]);
 
-  useEffect(() => {
-    if (profileAddress) {
-      setSignerAddress(profileAddress);
-
-      fetchOwnedNfts("0x0c5AB026d74C451376A4798342a685a0e99a5bEe", MachinFiContract);
-      fetchOwnedNfts("0x9756e951dd76e933e34434db4ed38964951e588b", SumoContractContract);
-      fetchOwnedNfts("0x7d150d3eb3ad7ab752df259c94a8ab98d700fc00", XSumoContract);
-      fetchOwnedNfts("0x7f8cb1d827f26434da652b4e9bd02c698cc2842a", LoxodromeContract);
-      fetchOwnedNfts("0xdfbbeba6d17b0d49861ab7f26cda495046314370", BuzzBotsContract);
-      fetchOwnedNfts("0xaf1b5063a152550aebc8d6cb0da6936288eab3dc", RobotAiContract);             
-      fetchOwnedNfts("0xc52121470851d0cba233c963fcbb23f753eb8709", SpunksContract);
-      fetchOwnedNfts("0xce300b00aa9c066786D609Fc96529DBedAa30B76", IotexPunksContract);
-    }
-  }, [profileAddress, fetchOwnedNfts]);
+  
 
   const fetchUserProfile = useCallback(async (signerAddress: string | undefined, contract: ThirdwebContract) => {
     if (!signerAddress) return;
@@ -450,7 +447,6 @@ const ProfilePageClient: React.FC<ProfilePageClientProps> = ({
         method: resolveMethod("getActiveProfileImage"),
         params: [signerAddress]
       }) as unknown as string;
-      console.log("Profile image fetched:", imageUrl);
 
       if (imageUrl.startsWith("ipfs://")) {
         const ipfsData = await fetchIPFSData(imageUrl);
@@ -475,7 +471,6 @@ const ProfilePageClient: React.FC<ProfilePageClientProps> = ({
         method: resolveMethod("getActiveBackgroundImage"),
         params: [signerAddress]
       }) as unknown as string;
-      console.log("Background image fetched from contract:", exists);
       setNftImageUrl(exists);
       const ipfsData = await fetchIPFSData(exists);
       console.log("Fetched IPFS data:", ipfsData);
@@ -487,7 +482,6 @@ const ProfilePageClient: React.FC<ProfilePageClientProps> = ({
 
   useEffect(() => {
     if (profileAddress) {
-      console.log("Account address:", profileAddress);
       fetchUserProfile(profileAddress, AppMint);
       fetchUserBackround(profileAddress, AppMint);
     } else {
@@ -509,8 +503,7 @@ const ProfilePageClient: React.FC<ProfilePageClientProps> = ({
   const handleOpenModalGroup = () => setGroupModalVisible(true);
   const handleCloseModalGroup = () => setGroupModalVisible(false);
 
-  console.log('ProfileNft:', ownedNftsProfile);
-  console.log('Backroundnft:', ownedNftsBackRound);
+
 
   // Pagination for NFTs
   const totalNfts = useMemo(() => {
@@ -696,11 +689,7 @@ const ProfilePageClient: React.FC<ProfilePageClientProps> = ({
                 <Suspense fallback={<NFTGridLoading />}>
                   <NFTGridProfile
                     ownedNfts2={ownedNfts2}
-                    nftData={nftData}
-                    emptyText={"It Looks Like you don't have any NFTs."}
-                    refetchAllListings={refetchAllListings}
-                    refetchAllAuctions={refetchAllAuctions}
-                    refetchAllOffers={refetchAllOffers}
+                    
                   />
                 </Suspense>
               )
@@ -708,11 +697,7 @@ const ProfilePageClient: React.FC<ProfilePageClientProps> = ({
               <Suspense fallback={<NFTGridLoading />}>
                 <NFTGridProfile
                   ownedNfts2={ownedNfts}
-                  nftData={nftData} 
-                  emptyText={"It Looks Like you don't have any NFTs."}
-                  refetchAllListings={refetchAllListings}
-                  refetchAllAuctions={refetchAllAuctions}
-                  refetchAllOffers={refetchAllOffers}
+                  
                 />
               </Suspense>
             )}
@@ -729,36 +714,35 @@ const ProfilePageClient: React.FC<ProfilePageClientProps> = ({
         </div>
         <div className={tab === 'listings' ? styles.activeTabContent : styles.tabContent}>
           <div className={styles.flexContainer}>
-            {listingsData.length === 0 ? (
+            {nftData.length === 0 ? (
               <p>{"Your NFTs on the market."}</p>
-            ) : (
-              <Suspense fallback={<NFTGridLoading />}>
-                <NFTGrid
-                  nftData={listingsData}
-                  emptyText={"It Looks Like you don't have any NFTs on the market."}
-                  refetchAllListings={refetchAllListings}
-                  refetchAllAuctions={refetchAllAuctions}
-                  refetchAllOffers={refetchAllOffers}
-                />
-              </Suspense>
-            )}
+            ) : 
+            nftData
+            .map(data => (
+              <NFTCard
+                key={data.listing?.tokenId.toString()}
+                tokenId={data.listing?.tokenId || BigInt(0)}
+                contractAddresse={data.listing?.assetContractAddress.toString()}
+                chainId={4689}
+              />
+            ))}
           </div>
         </div>
         <div className={tab === 'auctions' ? styles.activeTabContent : styles.tabContent}>
           <div className={styles.flexContainer}>
-            {auctionsData.length === 0 ? (
+            {nftData.length === 0 ? (
               <p>{"Your NFTs on the market."}</p>
-            ) : (
-              <Suspense fallback={<NFTGridLoading />}>
-                <NFTGrid
-                  nftData={auctionsData}
-                  emptyText={"It Looks Like you don't have any NFTs on the market."}
-                  refetchAllListings={refetchAllListings}
-                  refetchAllAuctions={refetchAllAuctions}
-                  refetchAllOffers={refetchAllOffers}
-                />
-              </Suspense>
-            )}
+            ) : 
+            NftDataAuction
+                .map(data => (
+                  <NFTCard
+                    key={data.tokenId.toString()}
+                    tokenId={data.tokenId || BigInt(1)}
+                    contractAddresse={data.contractAddress.toString()}
+                    chainId={4689}
+                  />
+                ))}
+            
           </div>
         </div>
       </Container>

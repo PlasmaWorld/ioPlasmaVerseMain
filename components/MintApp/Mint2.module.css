@@ -1,0 +1,268 @@
+/* styles.css */
+
+.MintApp {
+    padding: 20px;
+    font-family: Arial, sans-serif;
+  }
+  
+  /* Tabs */
+  .tabs {
+    display: flex;
+    margin-bottom: 20px;
+  }
+  
+  .tabs button {
+    background-color: #f1f1f1;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 10px 20px;
+    margin-right: 5px;
+    cursor: pointer;
+    outline: none;
+    transition: background-color 0.3s;
+  }
+  
+  .tabs button.active {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+  }
+  
+  .tabContent {
+    margin-top: 20px;
+  }
+  .title {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 16px;
+  }
+  
+  .description {
+    font-size: 16px;
+    margin-bottom: 24px;
+    color: #ffffff;
+  }
+  
+  .quantityLabel {
+    margin-right: 8px;
+    font-weight: bold;
+  }
+  
+  .warning {
+    color: red;
+    margin-top: 20px;
+  }
+  
+  .footer {
+    margin-top: 40px;
+    text-align: center;
+    font-size: 14px;
+    color: #ffffff;
+  }
+  
+  /* VRM Container */
+  .VrmContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+  
+  .threejsContainer {
+    width: 100%;
+    height: 600px;
+    position: relative;
+    margin-top: 20px; /* Added margin to separate from the upload button */
+    z-index: 1020;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .Metadata {
+    width: 35%;
+    background-color: rgba(255, 255, 255, 0.04);
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .Metadata pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+  
+  /* File Input */
+  .fileInputContainer {
+    margin: 20px 0;
+  }
+  
+  .fileInputLabel {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+  }
+  
+  .fileInput {
+    display: block;
+    margin-bottom: 10px;
+  }
+  
+  .textarea {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+  }
+  
+  /* Attribute Inputs */
+  .attributesContainer {
+    margin: 20px 0;
+  }
+  
+  .attributeInputGroup {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  
+  .attributeInputGroup input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  
+  .addAttributeButton {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    outline: none;
+    transition: background-color 0.3s;
+  }
+  
+  .addAttributeButton:hover {
+    background-color: #0056b3;
+  }
+  
+  /* Transaction Button */
+  .mintButton {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    outline: none;
+    transition: background-color 0.3s;
+  }
+  
+  .mintButton:hover {
+    background-color: #218838;
+  }
+  
+  /* Error Message */
+  .error {
+    color: red;
+    font-weight: bold;
+    margin-top: 10px;
+  }
+  
+  /* Customize Container */
+  .customizeContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+  }
+  
+  .categoryHeader {
+    display: flex;
+    overflow-x: auto;
+    margin-bottom: 10px;
+  }
+  
+  .categoryHeader button {
+    background-color: #f1f1f1;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 10px 20px;
+    margin-right: 5px;
+    cursor: pointer;
+    outline: none;
+    transition: background-color 0.3s;
+  }
+  
+  .categoryHeader button.activeCategory {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+  }
+  
+  .imageContainer {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    overflow: hidden;
+    position: relative;
+  }
+  
+  .imageList {
+    display: flex;
+    overflow-x: auto;
+    gap: 10px;
+    flex: 1;
+  }
+  
+  .imageItem {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .imageItem img {
+    max-width: 100px;
+    max-height: 100px;
+  }
+  
+  .navButton {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    outline: none;
+    transition: background-color 0.3s;
+    flex-shrink: 0;
+  }
+  
+  .navButton:hover {
+    background-color: #0056b3;
+  }
+  
+  .selectedImagePreview {
+    margin-top: 20px;
+    text-align: center;
+  }
+  
+  .selectedImagePreview img {
+    max-width: 200px;
+    max-height: 200px;
+  }
+
+  .input {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #D1D5DB;
+    border-radius: 0.25rem;
+    background-color: #FFFFFF;
+    color: #000000;
+    box-sizing: border-box;
+  }
+  

@@ -9,6 +9,7 @@ import { MARKETPLACE, NETWORK } from "@/const/contracts";
 import toastStyle from "@/util/toastConfig";
 import client from "@/lib/client";
 import { useState, useEffect } from "react";
+import { fetchEvents } from "@/lib/fetchedEvents2";
 
 // Define the ioSibaErc20 contract address and initialize the contract
 const ioSibaErc20 = "0x3ea683354bf8d359cd9ec6e08b5aec291d71d880" as const;
@@ -19,19 +20,17 @@ const ioShiba = getContract({
 });
 
 export default function DirectListingParent({
-  nft,
+  tokenId,
   pricePerToken,
   listingStart,
   listingEnd,
   contractAddress,
-  refetchAllListings,
 }: {
-  nft: NFTType;
+  tokenId: bigint;
   pricePerToken: string;
   listingStart: string;
   listingEnd: string;
   contractAddress: string;
-  refetchAllListings: () => void;
 }) {
   const router = useRouter();
   const account = useActiveAccount();
@@ -54,7 +53,7 @@ export default function DirectListingParent({
       const transaction = await createListing({
         contract: MARKETPLACE,
         assetContractAddress: address,
-        tokenId: nft.id,
+        tokenId: tokenId,
         pricePerToken: pricePerToken,
         startTimestamp: new Date(listingStart),
         endTimestamp: new Date(listingEnd),
@@ -89,6 +88,7 @@ export default function DirectListingParent({
         });
       }}
       onTransactionConfirmed={async (txResult) => {
+
         console.log("Transaction confirmed:", txResult);
         toast("Listed Successfully!", {
           icon: "🥳",
@@ -96,7 +96,6 @@ export default function DirectListingParent({
           style: toastStyle,
           position: "bottom-center",
         });
-        await refetchAllListings();
         router.refresh();
       }}
     >

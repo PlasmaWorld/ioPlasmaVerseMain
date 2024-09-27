@@ -1,20 +1,54 @@
 "use client";
 
-import React, { FC, useState, useEffect } from "react";
+import React, { FC, useState, useEffect, useMemo } from "react";
 import { useActiveAccount } from "thirdweb/react";
-import { DirectListing, EnglishAuction, Offer } from "thirdweb/extensions/marketplace";
 import { useCurrency } from "@/Hooks/CurrencyProvider";
+import { useMarketplaceData } from "@/Hooks/MarketProvider";
+import { ListingStatus } from "@/customDirectListing/DirectListingListingStatis";
+import { Address } from "thirdweb";
+
+interface DirectListing {
+  id: bigint;
+  creatorAddress: Address;
+  assetContractAddress: Address;
+  tokenId: bigint;
+  quantity: bigint;
+  currencyContractAddress: Address;
+  currencySymbol: string;
+  pricePerToken: string;
+  startTimeInSeconds: bigint;
+  endTimeInSeconds: bigint;
+  isReservedListing: boolean;
+  status: number;
+}
+interface EnglishAuction {
+  id: bigint;
+  creatorAddress: Address;
+  assetContractAddress: Address;
+  tokenId: bigint;
+  quantity: bigint;
+  currencyContractAddress: Address;
+  minimumBidAmount: bigint;
+  minimumBidCurrencyValue: string;
+  buyoutBidAmount: bigint;
+  buyoutCurrencyValue: string;
+  timeBufferInSeconds: bigint;
+  bidBufferBps: bigint;
+  startTimeInSeconds: bigint;
+  endTimeInSeconds: bigint;
+  status: ListingStatus;
+}
 
 type INFTCardProps = {
   nft?: {
     tokenId: bigint;
     listing?: (DirectListing | EnglishAuction)[];
-    offers?: Offer[];
   } | null;
   tokenId: bigint;
   contractAddress: string;
-  refetchAllListings: () => void;
-  refetchAllAuctions: () => void;
+  extraProp: string;
+
+  
 };
 
 interface Currency {
@@ -43,26 +77,27 @@ const LEGEND_STYLES = "mb-2 text-white/80";
 export const NftInformationPrice: FC<INFTCardProps> = ({
   contractAddress,
   tokenId,
-  nft,
-  refetchAllListings,
-  refetchAllAuctions,
+  nft,extraProp
+  
 }) => {
   const account = useActiveAccount();
   const { selectedCurrency } = useCurrency(); 
-
-  const directListing = nft?.listing?.find(
-    (l): l is DirectListing => 'currencyValuePerToken' in l && l.assetContractAddress === contractAddress && l.tokenId === tokenId
+  const { validListings, validAuctions } = useMarketplaceData();
+  
+  const directListing = useMemo(() => 
+    validListings?.find(
+      (l): l is DirectListing => l.assetContractAddress === contractAddress && l.tokenId === tokenId
+    ), 
+    [validListings, contractAddress, tokenId]
   );
+  
 
-  const auctionListing = nft?.listing?.find(
-    (a): a is EnglishAuction => 'buyoutCurrencyValue' in a && a.assetContractAddress === contractAddress && a.tokenId === tokenId
-  );
+  const auctionListing = useMemo(() => 
+    validAuctions?.find(
+      (l): l is EnglishAuction => l.assetContractAddress === contractAddress && l.tokenId === tokenId
+    ), 
+    [validAuctions, contractAddress, tokenId]  );
 
-  useEffect(() => {
-    console.log("Selected Currency:", selectedCurrency);
-    console.log("Direct Listing:", directListing);
-    console.log("Auction Listing:", auctionListing);
-  }, [selectedCurrency, directListing, auctionListing]);
 
   const formatPrice = (price: string, decimals: number) => {
     const priceInSmallestUnit = BigInt(price);
@@ -81,15 +116,15 @@ export const NftInformationPrice: FC<INFTCardProps> = ({
                 <>
                   {directListing.currencyContractAddress === "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" ? (
                     <>
-                      {directListing.currencyValuePerToken.displayValue} <span>IOTX</span>
+                      {directListing.pricePerToken} <span>IOTX</span>
                     </>
                   ) : directListing.currencyContractAddress === "0x3EA683354bf8d359cd9EC6E08B5AEC291D71d880" ? (
                     <>
-                      {directListing.currencyValuePerToken.displayValue} <span>ioShiba</span>
+                      {directListing.pricePerToken} <span>ioShiba</span>
                     </>
                   ) : directListing.currencyContractAddress === "0xdfF8596d62b6d35fFFfc9e465d2FDeA49Ac3c311" ? (
                     <>
-                      {directListing.currencyValuePerToken.displayValue} <span>Depinny</span>
+                      {directListing.pricePerToken} <span>Depinny</span>
                     </>
                   ) :(
                     "Currency not supported"
@@ -98,18 +133,11 @@ export const NftInformationPrice: FC<INFTCardProps> = ({
               )}
               {auctionListing && (
                 <>
-                  {formatPrice(auctionListing.buyoutCurrencyValue.displayValue, selectedCurrency.decimals)} <span>{selectedCurrency.symbol}</span>
+                  {auctionListing.minimumBidCurrencyValue} <span>{selectedCurrency.symbol}</span>
                 </>
               )}
             </div>
-            {auctionListing && (
-              <>
-                <p className="mb-4 text-white/60" style={{ marginTop: 12 }}>Bids starting from</p>
-                <div className="font-medium rounded-md font-lg text-white/90">
-                  {formatPrice(auctionListing.minimumBidCurrencyValue.displayValue, selectedCurrency.decimals)} <span>{selectedCurrency.symbol}</span>
-                </div>
-              </>
-            )}
+           
           </div>
         ) : (
           <div className="p-4 rounded-lg w-full bg-white/[.04]">

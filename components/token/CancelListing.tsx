@@ -11,11 +11,10 @@ import type { Account } from "thirdweb/wallets";
 type Props = {
   account: Account;
   listingId: bigint;
-  refetchAllListings: () => void;
 
 };
 
-export default function CancelListingButton({ account, listingId, refetchAllListings }: Props) {
+export default function CancelListingButton({ account, listingId,  }: Props) {
   const switchChain = useSwitchActiveWalletChain();
   const activeChain = useActiveWalletChain();
 
@@ -33,7 +32,6 @@ export default function CancelListingButton({ account, listingId, refetchAllList
                      transaction,
                      account,
                    });
-                   await refetchAllListings();
                  }}
                >
                  Cancel

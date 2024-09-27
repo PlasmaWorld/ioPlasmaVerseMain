@@ -50,7 +50,7 @@ const SocialPostCreator = () => {
 
   return (
     <div className={styles.socialPostCreator}>
-      {mediaPreview.type === 'image' && <Image src={mediaPreview.url} alt="Preview" />}
+      {mediaPreview.type === 'image' && <img src={mediaPreview.url} alt="Preview" />}
       {mediaPreview.type === 'video' && <video src={mediaPreview.url} controls />}
       <label htmlFor="file-upload" className={styles.fileInputLabel}>
         Choose Image/Video

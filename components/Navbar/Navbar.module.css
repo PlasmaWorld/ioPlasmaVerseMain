@@ -35,6 +35,12 @@
   gap: 16px; /* Adjust this gap to control the space between the connect button and the profile link */
 }
 
+.connectProfileWrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .dropdown {
   position: relative; /* This is the reference for the absolutely positioned dropdownContent */
 }
@@ -129,4 +135,16 @@
   padding: 10px 20px; /* Increased padding for touch targets in the drawer */
   width: 100%;
   text-align: left; /* Aligns text to the left inside the drawer */
+}
+
+/* Add these classes to your existing CSS */
+
+.imgAutoWidth {
+  width: auto;
+  height: 48px; /* Set the desired height */
+}
+
+.imgAutoHeight {
+  width: 48px; /* Set the desired width */
+  height: auto;
 }

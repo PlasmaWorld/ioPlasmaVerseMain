@@ -1,5 +1,6 @@
 import { mergeGeometry } from './merge-geometry.js';
 import { MToonMaterial } from '@pixiv/three-vrm';
+import * as THREE from 'three';  // Import the THREE.js library
 
 let container, cameraRTT, sceneRTT, material, quad, renderer, rtTexture;
 

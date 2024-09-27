@@ -258,7 +258,6 @@ export const NftProvider: React.FC<UserProviderProps> = ({ children }) => {
               fetchOwnedNfts("0xdfbbeba6d17b0d49861ab7f26cda495046314370", BuzzBotsContract);
               fetchOwnedNfts("0xaf1b5063a152550aebc8d6cb0da6936288eab3dc", RobotAiContract);             
               fetchOwnedNfts("0xc52121470851d0cba233c963fcbb23f753eb8709", SpunksContract);
-              fetchOwnedNfts("0xce300b00aa9c066786D609Fc96529DBedAa30B76", IotexPunksContract);
 
 
           }

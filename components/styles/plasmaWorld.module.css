@@ -1,0 +1,144 @@
+.container {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  color: #e5e7eb;
+}
+
+.buttonContainer {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  margin-top: 100px;
+  overflow-x: auto; /* Add horizontal scroll */
+}
+.events {
+  width: 100%; /* Add horizontal scroll */
+}
+
+.buttonContainer > * {
+  flex: 0 0 auto;
+}
+
+.details {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.details h1 {
+  font-size: 2.5rem;
+  margin-bottom: 20px;
+}
+
+.socials {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.socials a {
+  margin: 0 8px;
+}
+
+.description {
+  margin-top: 16px;
+}
+
+.backButton {
+  margin-top: 16px;
+  padding: 8px 16px;
+  background-color: #3b82f6;
+  color: #ffffff;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.backButton:hover {
+  background-color: #2563eb;
+}
+
+.searchContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.searchBar {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+  width: 100%;
+  max-width: 384px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.05);
+  padding: 8px 16px;
+}
+
+.searchInput {
+  width: 100%;
+  background-color: transparent;
+  color: #ffffff;
+  border: none;
+  margin-left: 8px;
+  outline: none;
+}
+
+.searchedNFT {
+  display: flex;
+  justify-content: center;
+}
+
+.explorer,
+.contractData,
+.mint,
+.claim {
+  margin-top: 32px;
+}
+
+.loadingContainer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px;
+}
+
+.loadingCard {
+  height: 240px;
+  width: 240px;
+  background-color: #2d3748;
+  border-radius: 8px;
+}
+
+.nftGrid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px;
+}
+
+/* Media Queries for Responsive Design */
+@media (max-width: 600px) {
+  .buttonContainer {
+    flex-direction: row;
+    gap: 4px;
+    margin-top: 50px;
+  }
+
+  .details h1 {
+    font-size: 1.5rem; /* Adjust font size for smaller screens */
+    margin-bottom: 10px;
+  }
+
+  .socials {
+    flex-direction: column;
+  }
+
+  .socials a {
+    margin: 4px 0;
+  }
+
+  .description {
+    font-size: 1rem; /* Adjust font size for smaller screens */
+  }
+}

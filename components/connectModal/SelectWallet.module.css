@@ -1,0 +1,46 @@
+/* SelectWallet.module.css */
+.ConnectContainer {
+    padding-top: 120px;
+
+}
+.modalContainer {
+    display: flex;
+    justify-content: center;
+    height: 100vh;
+    padding-top: 100px;
+  }
+  
+  .customModal {
+    background: rgba(255, 255, 255, 0.105);
+    padding: 20px; /* Adjust this value as needed */
+    border-radius: 8px;
+
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .customConnectButtonContainer {
+    padding: 20px; /* Adjust this value as needed */
+  }
+  
+  .customButton {
+    width: 100%;
+    max-width: 300px; /* Adjust this value as needed */
+    margin-bottom: 10px;
+    padding: 10px 20px; /* Adjust this value as needed */
+    background-color: #007bff; /* Adjust this value as needed */
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    text-align: center;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .customButton:hover {
+    background-color: #0056b3; /* Adjust this value as needed */
+  }
+  
+  .customButton img {
+    margin-right: 10px; /* Adjust this value as needed */
+  }
+  

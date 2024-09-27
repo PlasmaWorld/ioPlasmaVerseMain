@@ -1,0 +1,132 @@
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modalContent {
+  background-color: rgb(48, 48, 53);
+  border-radius: 10px;
+  padding: 20px;
+  position: relative;
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.closeButton {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #D1D5DB;
+  border-radius: 0.25rem;
+  background-color: #FFFFFF;
+  color: #000000;
+  box-sizing: border-box;
+  margin-bottom: 15px;
+}
+
+.px4 {
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+.py2 {
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+.mt4 {
+  margin-top: 16px;
+}
+
+.textWhite {
+  color: white;
+}
+
+.bgBlue500 {
+  background-color: blue;
+}
+
+.rounded {
+  border-radius: 8px;
+}
+
+.hoverBgBlue600:hover {
+  background-color: darkblue;
+}
+
+.textRed500 {
+  color: red;
+}
+
+.field {
+  margin-bottom: 15px;
+}
+
+.label {
+  font-weight: bold;
+  margin-bottom: 5px;
+  display: block;
+}
+
+.description {
+  font-size: 12px;
+  color: rgb(255, 255, 255);
+  margin-top: 5px;
+}
+
+.imageContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 200px;
+  border: 2px dashed #ddd;
+  margin-bottom: 20px;
+}
+
+.imagePlaceholder {
+  color: #aaa;
+  font-size: 16px;
+  text-align: center;
+}
+
+.uploadedImage {
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.fileInput {
+  display: block;
+  margin: 0 auto 20px;
+  text-align: center;
+}

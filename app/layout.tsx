@@ -8,6 +8,8 @@ import { CurrencyProvider } from "@/Hooks/CurrencyProvider";
 import { ContractDataProvider } from "@/Hooks/NftStatsProvider";
 import { NftProvider } from "@/Hooks/NftOwnedProvider";
 import { UserProvider } from "@/Hooks/UserInteraction";
+import { BasketProvider } from "@/Hooks/BusketProvider";
+import { MarketplaceProvider } from "@/Hooks/MarketProvider";
 
 
 export const metadata: Metadata = {
@@ -30,7 +32,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </div>
         <Toaster />
         <ThirdwebProvider>
-          <ContractDataProvider>
+        <MarketplaceProvider>
+        <BasketProvider>
+        <ContractDataProvider>
             <NftProvider>
             <CurrencyProvider>
               <UserProvider>
@@ -45,7 +49,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               </UserProvider>
             </CurrencyProvider>
             </NftProvider>
+          
           </ContractDataProvider>
+          </BasketProvider>
+          </MarketplaceProvider>
         </ThirdwebProvider>
       </body>
     </html>

@@ -28,7 +28,7 @@ export default function NFTComponent({
   useEffect(() => {
     if (tokenId) {
 
-      const contract = getContractInstance(listing?.assetContractAddress as string);
+      const contract = getContractInstance("");
 
       getNFT({
         contract: contract,

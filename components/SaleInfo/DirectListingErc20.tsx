@@ -10,6 +10,7 @@ import toastStyle from "@/util/toastConfig";
 import client from "@/lib/client";
 import { useState, useEffect } from "react";
 import ApprovalButtonERC20 from "./ApprovalShiba";
+import { fetchEvents } from "@/lib/fetchedEvents2";
 
 // Define the ioSibaErc20 contract address and initialize the contract
 const DEPIINZ = "0xdff8596d62b6d35ffffc9e465d2fdea49ac3c311";
@@ -20,19 +21,17 @@ chain: NETWORK,
 });
 
     export default function DirectListingDeppiny({
-    nft,
+    tokenId,
     pricePerToken,
     listingStart,
     listingEnd,
     contractAddress,
-    refetchAllListings,
     }: {
-    nft: NFTType;
+    tokenId: bigint;
     pricePerToken: string;
     listingStart: string;
     listingEnd: string;
     contractAddress: string;
-    refetchAllListings: () => void;
     }) {
     const router = useRouter();
     const account = useActiveAccount();
@@ -53,7 +52,7 @@ chain: NETWORK,
         const transaction = await createListing({
           contract: MARKETPLACE,
           assetContractAddress: address,
-          tokenId: nft.id,
+          tokenId: tokenId,
           pricePerToken: pricePerToken,
           startTimestamp: new Date(listingStart),
           endTimestamp: new Date(listingEnd),
@@ -88,6 +87,7 @@ chain: NETWORK,
                 });
                 }}
                 onTransactionConfirmed={async (txResult) => {
+
                 console.log("Transaction confirmed:", txResult);
                 toast("Listed Successfully!", {
                 icon: "🥳",
@@ -95,7 +95,6 @@ chain: NETWORK,
                 style: toastStyle,
                 position: "bottom-center",
                 });
-                await refetchAllListings();
                 router.refresh();
                 }}
                 >

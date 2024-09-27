@@ -48,12 +48,45 @@ const ProfileImage: React.FC<ProfilePageProps> = ({ ownerAddresse }) => {
 
 
 
+  const fetchNFTData = useCallback(async (tokenId: string) => {
+    if (tokenId) {
+        try {
+            const contract = ChattApp;
+
+            // Fetch contract metadata
+            const contractMetadata = await getContractMetadata({ contract });
+            const contractName = contractMetadata.name;
+
+            // Fetch NFT data
+            const nftData = await getNFT({
+                contract,
+                tokenId: BigInt(tokenId),
+                includeOwner: true,
+            });
+
+
+            // Update state with fetched data
+            setNFT(nftData);
+            setContract(contractName);
+
+            // Extract and set attributes from the NFT metadata
+            if (nftData && nftData.metadata) {
+                const metadata = nftData.metadata as any;
+                if (metadata.attributes) {
+                    setAttributes(metadata.attributes);
+                } else {
+                }
+            }
+        } catch (error) {
+            console.error("Error fetching NFT:", error);
+        }
+    }
+}, []);
 
   // Get the contract
   const fetchUserInfo = useCallback(async (signerAddress: string | undefined, contract: ThirdwebContract) => {
       if (!signerAddress) return;
       setIsLoading(true);
-      console.log("Fetching user info started for signerAddress:", signerAddress);
       try {
           const userInfo = await readContract({
               contract,
@@ -61,7 +94,6 @@ const ProfileImage: React.FC<ProfilePageProps> = ({ ownerAddresse }) => {
               params: [signerAddress]
           }) as unknown as any[];
 
-          console.log("Fetched user info:", userInfo);
 
           if (userInfo && userInfo.length > 0) {
               const tokenId = BigNumber.from(userInfo[0]).toString();
@@ -87,7 +119,7 @@ const ProfileImage: React.FC<ProfilePageProps> = ({ ownerAddresse }) => {
       } finally {
           setIsLoading(false);    
       }
-  }, []);
+  }, [fetchNFTData]);
 
   const fetchUserExists = useCallback(async (signerAddress: string | undefined, contract: ThirdwebContract) => {
       if (!signerAddress) return;
@@ -98,53 +130,13 @@ const ProfileImage: React.FC<ProfilePageProps> = ({ ownerAddresse }) => {
               params: [signerAddress]
           }) as unknown as boolean;
           setUserExists(exists);
-          console.log("userExists", { exists });
       } catch (error) {
           console.error('Error checking user existence:', error);
           setUserExists(false);
       }
   }, []);
 
-  const fetchNFTData = useCallback(async (tokenId: string) => {
-      if (tokenId) {
-          console.log("Fetching NFT data started for tokenId:", tokenId);
-          try {
-              const contract = ChattApp;
-
-              // Fetch contract metadata
-              const contractMetadata = await getContractMetadata({ contract });
-              const contractName = contractMetadata.name;
-              console.log("Contract Name:", contractName);
-
-              // Fetch NFT data
-              const nftData = await getNFT({
-                  contract,
-                  tokenId: BigInt(tokenId),
-                  includeOwner: true,
-              });
-
-              console.log("Fetched NFT data:", nftData);
-
-              // Update state with fetched data
-              setNFT(nftData);
-              setContract(contractName);
-
-              // Extract and set attributes from the NFT metadata
-              if (nftData && nftData.metadata) {
-                  const metadata = nftData.metadata as any;
-                  if (metadata.attributes) {
-                      setAttributes(metadata.attributes);
-                      console.log("NFT attributes:", metadata.attributes);
-                  } else {
-                      console.log("No attributes found in metadata.");
-                  }
-              }
-          } catch (error) {
-              console.error("Error fetching NFT:", error);
-          }
-      }
-  }, []);
-
+  
   useEffect(() => {
       if (ownerAddresse) {
           const signerAddress = ownerAddresse;
@@ -152,24 +144,21 @@ const ProfileImage: React.FC<ProfilePageProps> = ({ ownerAddresse }) => {
           fetchUserInfo(signerAddress, ChattApp);
           fetchUserExists(signerAddress, ChattApp);
       }
-  }, [ownerAddresse, fetchUserInfo, fetchUserExists, ChattApp]);
+  }, [ownerAddresse, fetchUserInfo, fetchUserExists, setSignerAddress]);
 
 
   const account = ownerAddresse;
   
 
-  console.log("Profile Address:", ownerAddresse); // Debugging line
 
   const fetchUserProfile = useCallback(async (signerAddress: string | undefined, contract: ThirdwebContract) => {
     if (!signerAddress) return;
     try {
-      console.log("Fetching profile image for:", signerAddress);
       const imageUrl = await readContract({
         contract,
         method: resolveMethod("getActiveProfileImage"),
         params: [signerAddress]
       }) as unknown as string;
-      console.log("Profile image fetched:", imageUrl);
 
       if (imageUrl.startsWith("ipfs://")) {
         const ipfsData = await fetchIPFSData(imageUrl);
@@ -192,17 +181,12 @@ const ProfileImage: React.FC<ProfilePageProps> = ({ ownerAddresse }) => {
 
   useEffect(() => {
     if (account) {
-      console.log("Account address:", account);
       fetchUserProfile(account, AppMint);
 
-    } else {
-      console.log("No account found");
     }
   }, [account, fetchUserProfile]);
 
-  useEffect(() => {
-    console.log("NFT:", nft);
-  }, [nft]);
+ 
 
   return (
     <div className="flex flex-col items-center justify-center  min-w-[120px] min-h-[180px]">

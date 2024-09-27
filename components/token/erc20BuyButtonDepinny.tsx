@@ -1,7 +1,7 @@
 "use client";
 import { TransactionButton, useActiveAccount, useReadContract } from "thirdweb/react";
 import {
-  DirectListing,
+  
   EnglishAuction,
   buyFromListing,
   buyoutAuction,
@@ -14,6 +14,23 @@ import { balanceOf } from "thirdweb/extensions/erc20";
 import { BigNumber, ethers } from "ethers";
 import { useEffect, useState } from "react";
 import { Deppiny } from "../SaleInfo/ApprovalDepinny";
+import { Address } from "thirdweb";
+import { fetchEvents } from "@/lib/fetchedEvents2";
+
+interface DirectListing {
+  id: bigint;
+  creatorAddress: Address;
+  assetContractAddress: Address;
+  tokenId: bigint;
+  quantity: bigint;
+  currencyContractAddress: Address;
+  currencySymbol: string;
+  pricePerToken: string;
+  startTimeInSeconds: bigint;
+  endTimeInSeconds: bigint;
+  isReservedListing: boolean;
+  status: number;
+}
 
 const toEther = (value: BigNumber | bigint): string => {
   if (typeof value === 'bigint') {
@@ -30,31 +47,28 @@ const toSmallestUnit = (amount: string, decimals: number): string => {
 export default function BuyListingButtonErc20({
   auctionListing,
   directListing,
-  refetchAllListings,
+ account,
 }: {
   auctionListing?: EnglishAuction;
   directListing?: DirectListing;
-  refetchAllListings: () => void;
+  account: Address;
 }) {
-  const account = useActiveAccount();
   const [hasSufficientBalance, setHasSufficientBalance] = useState(false);
-  if (!account) {
-    return null;
-  }
+ 
   const { data: UserTokenBalance, isLoading: loadingUserWallet } = useReadContract(
     balanceOf,
     {
       contract: Deppiny,
-      address: account.address,
+      address: account,
       queryOptions: {
-        enabled: !!account?.address,
+        enabled: !!account,
       }
     }
   );
 
   useEffect(() => {
     if (!loadingUserWallet && UserTokenBalance && directListing) {
-      const listingPrice = BigInt(toSmallestUnit(directListing.currencyValuePerToken.displayValue, 9));
+      const listingPrice = BigInt(toSmallestUnit(directListing.pricePerToken, 18));
       const userBalance = BigInt(UserTokenBalance.toString());
 
       if (userBalance >= listingPrice) {
@@ -68,15 +82,15 @@ export default function BuyListingButtonErc20({
   return (
     <TransactionButton
       disabled={
-        account?.address === auctionListing?.creatorAddress ||
-        account?.address === directListing?.creatorAddress ||
+        account === auctionListing?.creatorAddress ||
+        account === directListing?.creatorAddress ||
         (!directListing && !auctionListing) ||
         !hasSufficientBalance ||
         loadingUserWallet
       }
       transaction={async () => {
         if (!account) throw new Error("No account");
-        console.log("Transaction initiated by account:", account.address);
+        console.log("Transaction initiated by account:", account);
         
         if (auctionListing) {
           console.log("Auction Listing ID:", auctionListing.id);
@@ -91,7 +105,7 @@ export default function BuyListingButtonErc20({
           return buyFromListing({
             contract: MARKETPLACE,
             listingId: directListing.id,
-            recipient: account.address,
+            recipient: account,
             quantity: BigInt(1),
           });
         } else {
@@ -116,6 +130,7 @@ export default function BuyListingButtonErc20({
         });
       }}
       onTransactionConfirmed={async (txResult) => {
+
         console.log("Transaction confirmed with result:", txResult);
         toast("Purchased Successfully!", {
           icon: "🥳",
@@ -124,7 +139,6 @@ export default function BuyListingButtonErc20({
           position: "bottom-center",
         });
         // Refetch the data after transaction confirmation
-        await refetchAllListings();
       }}
     >
       Buy with Depinny Now

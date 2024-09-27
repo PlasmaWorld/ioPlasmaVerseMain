@@ -1,0 +1,82 @@
+/* contractCard.module.css */
+
+.card {
+  border: 1px solid #e0e0e0;
+  padding: 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-bottom: 16px;
+  background-color: rgba(255, 255, 255, 0.04);
+  transition: background-color 0.3s ease-in-out;
+  color: #e7e6e6; /* Ensures all text inside the card is light */
+}
+
+.card:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.checkmark {
+  color: green;
+}
+
+.buttonsContainer {
+  margin-top: 20px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.openModalButton,
+.checkOutButton {
+  padding: 10px 20px;
+  background-color: blue;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-right: 10px;
+}
+
+.checkOutButton {
+  background-color: green;
+}
+
+.openModalButton:hover,
+.checkOutButton:hover {
+  opacity: 0.8;
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modalContent {
+  background-color: white;
+  padding: 20px;
+  border-radius: 10px;
+  position: relative;
+  width: 90%;
+  max-width: 600px;
+}
+
+.closeButton {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 24px;
+  cursor: pointer;
+}

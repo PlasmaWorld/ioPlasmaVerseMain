@@ -151,9 +151,23 @@ export const ioShiba = getContract({
 	chain: NETWORK,
 });
 
-const Chatt = "0xF4B8EA6c6cEb833D3Da84f93076C0F4eC5eC5959";
+const ioUsdc = "0x3B2bf2b523f54C4E454F08Aa286D03115aFF326c";
+export const ioUSDCondract = getContract({
+	address: ioUsdc,
+	client,
+	chain: NETWORK,
+});
+
+const Chatt = "0x9AF96F577C6830d7464dAB8a5bB156F11A200bAe";
 export const ChattApp = getContract({
 	address: Chatt,
+	client,
+	chain: NETWORK,
+});
+
+const Chatt2 = "0x1b7AAb1973F352886117A5C3fCD51866d1beA0DD";
+export const ChattApp2 = getContract({
+	address: Chatt2,
 	client,
 	chain: NETWORK,
 });
@@ -171,6 +185,20 @@ export const AppMint = getContract({
 const NFT_COLLECTION_ADDRESS = "0xbC4027183E1FD5CC00218f846Ed953b6053a17F2";
 export const NFT_COLLECTION = getContract({
 	address: NFT_COLLECTION_ADDRESS,
+	client,
+	chain: NETWORK,
+});
+
+const Product = "0xa8d80A16dAFC559Bf2af9e6e295b412960A49626";
+export const PlasmaProduct = getContract({
+	address: Product,
+	client,
+	chain: NETWORK,
+});
+
+const merch = "0x5e918C1F6fC2dE1A1b57D6a2d731F767CE0830B4";
+export const Merchendise = getContract({
+	address: merch,
 	client,
 	chain: NETWORK,
 });

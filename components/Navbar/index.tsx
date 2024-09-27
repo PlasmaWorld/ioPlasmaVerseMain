@@ -2,13 +2,23 @@
 import Image from "next/image";
 import Link from "next/link";
 import client from "@/lib/client";
-import { useRouter } from "next/navigation";  
+import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { Burger, Drawer } from "@mantine/core";
+import { Burger, Button, Drawer } from "@mantine/core";
 import styles from "./Navbar.module.css";
 import { NETWORK } from "@/const/contracts";
-import styled from "@emotion/styled";
-import { ConnectButton, useActiveAccount } from "thirdweb/react";
+import { createThirdwebClient, defineChain, getContract } from "thirdweb";
+import {
+  useActiveAccount,
+  useSetActiveWallet,
+  PayEmbed,
+  ConnectButton,
+  TransactionButton,
+  useActiveWallet,
+  MediaRenderer,
+  useReadContract,
+  useActiveWalletChain,
+} from "thirdweb/react";
 
 
 export function Navbar() {
@@ -17,37 +27,12 @@ export function Navbar() {
   const [isPC, setIsPC] = useState(false);
   const [nftDropdownOpen, setNftDropdownOpen] = useState(false);
   const [socialDropdownOpen, setSocialDropdownOpen] = useState(false);
-  const account = useActiveAccount(); 
+  const [modalOpen, setModalOpen] = useState(false);
+  const [isBasketModalOpen, setBasketModalOpen] = useState(false); // State to control basket modal
+  const account = useActiveAccount();
+  const activeChain = useActiveWalletChain();
+  const NETWORK = defineChain(activeChain?.id|| 4689);
 
-  useEffect(() => {
-    // Function to hide the appMetadata elements
-    const hideAppMetadata = () => {
-      const metadataElements = document.querySelectorAll(
-        ".tw-connect-modal .tw-app-metadata-name, .tw-connect-modal .tw-app-metadata-url, .tw-connect-modal .tw-app-metadata-description, .tw-connect-modal .tw-app-metadata-logo"
-      );
-      metadataElements.forEach((el) => {
-        if (el instanceof HTMLElement) {
-          el.style.display = "none";
-        }
-      });
-    };
-
-    // Wait for the modal to be rendered, then hide the elements
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (mutation.addedNodes.length) {
-          hideAppMetadata();
-        }
-      });
-    });
-
-    // Observe changes in the body to detect modal rendering
-    observer.observe(document.body, { childList: true, subtree: true });
-
-    // Clean up the observer on component unmount
-    return () => observer.disconnect();
-  }, []);
-  
 
   useEffect(() => {
     const handleResize = () => {
@@ -70,12 +55,15 @@ export function Navbar() {
     }
   };
 
+  const openModal = () => setModalOpen(true);
+  const closeModal = () => setModalOpen(false);
+
   return (
     <div className={styles.navContainer}>
       <nav className="flex items-center justify-between w-full px-8 py-5 mx-auto max-w-7xl">
         <Link href="/" className={`${styles.homeLink} ${styles.navLeft}`}>
           <Image
-            src="/logo.png"
+            src="/ioPlasmaVerse.png"
             width={48}
             height={48}
             alt="NFT marketplace sample logo"
@@ -87,8 +75,8 @@ export function Navbar() {
             <a className={styles.link}>NFT Section</a>
             {nftDropdownOpen && (
               <div className={styles.dropdownContent}>
-                <Link href="/buy" className={styles.link}>
-                  Buy
+                 <Link href="/buy" className={styles.link}>
+                  NftMarket
                 </Link>
                 <Link href="/NftGalerie" className={styles.link}>
                   NftGalerie
@@ -110,39 +98,32 @@ export function Navbar() {
               </div>
             )}
           </div>
+          <div className={styles.link}><Link href="/contracts" className={styles.link}>
+                  Contracts
+                </Link>
+                </div>
         </div>
+
+        
 
         <div className={styles.navRight}>
           <div className={styles.connectProfile}>
-          <div className={styles.customConnectButtonContainer}>
-          <ConnectButton
-      client={client}
-     
-      connectModal={{
-        size: 'compact', // Use 'compact' to reduce modal size
-      }}
-      detailsModal={{
-        hideDisconnect: true, // Hide the disconnect button
-      }}
-      connectButton={{
-        label: 'Connect Wallet',
-        className: 'my-custom-class',
-        style: {
-          borderRadius: '10px',
-          padding: '0.5rem 1rem',
-        },
-      }}
-    />
-            </div>           
-            {account?.address && (
-              <Link href={`/profile/${account.address}`} passHref className={styles.profileLink}>
-                <div className={styles.profileImageContainer}>
-                  <Image src="/user-icon.png" width={42} height={42} alt="Profile" />
-                </div>
-              </Link>
+            {account ? (
+              <div className={styles.connectProfileWrapper}>
+                <ConnectButton client={client} />
+                <Link href={`/profile/${account?.address}`} passHref className={styles.profileLink}>
+                  <div className={styles.profileImageContainer}>
+                    <Image src="/user-icon.png" width={42} height={42} alt="Profile" />
+                  </div>
+                </Link>
+              </div>
+            ) : (
+              <ConnectButton client={client} chain={NETWORK} />
             )}
           </div>
-
+          <button onClick={() => setBasketModalOpen(true)} className={styles.basketButton}>
+            <Image src="/Basket.png" width={42} height={42} alt="Basket" />
+          </button>
           {!isPC && (
             <div className={styles.burgerMenu}>
               <Burger opened={opened} onClick={() => setOpened(!opened)} />
@@ -153,12 +134,15 @@ export function Navbar() {
               ioPlasmaVerse
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 <Link href="/" className={styles.link}>Home</Link>
-                <Link href="/SocialMedia" className={styles.link}>SocialMedia</Link>
+                <Link href="/contracts" className={styles.link}>contracts</Link> 
+
+                <Link href="/SocialMedia" className={styles.link}>SocialPost</Link> 
+                 <Link href="/buy" className={styles.link}>Marketplace</Link>
+
                 <Link href="/NftMint" className={styles.link}>Nft LaunchPad</Link>
                 <Link href="/NftGalerie" className={styles.link}>Nft Collection</Link>
-                <Link href="/buy" className={styles.link}>MarketPlace</Link>
-              </div>
-              
+                
+          </div>
             </div>
           </Drawer>
         </div>

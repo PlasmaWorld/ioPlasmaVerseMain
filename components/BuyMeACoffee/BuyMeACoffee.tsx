@@ -49,7 +49,7 @@ const UserCard: React.FC<UserCardProps> = ({ onClose, ownerAddress }) => {
         }
       }, [ExistUser]);
 
-    const signerAddress = ownerAddress;
+      const signerAddress = ownerAddress;
     
     const fetchUsername = useCallback(async (signerAddress: string | undefined, contract: ThirdwebContract) => {
         if (!signerAddress) return;
@@ -106,7 +106,7 @@ const UserCard: React.FC<UserCardProps> = ({ onClose, ownerAddress }) => {
         } finally {
             setIsLoading(false);
         }
-    }, [signerAddress]);
+    }, []);
 
     const fetchgetCoffeesReceived = useCallback(async (signerAddress: string | undefined, contract: ThirdwebContract) => {
         if (!signerAddress) return;
@@ -126,7 +126,7 @@ const UserCard: React.FC<UserCardProps> = ({ onClose, ownerAddress }) => {
         } finally {
             setIsLoading(false);
         }
-    }, [signerAddress]);
+    }, [    ]);
 
     const fetchUserProfile = useCallback(async (signerAddress: string | undefined, contract: ThirdwebContract) => {
         if (!signerAddress) return;

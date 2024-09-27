@@ -1,9 +1,9 @@
-import React, { FC, useEffect, useState, useCallback } from "react";
+import React, { FC, useEffect, useState, useCallback, useMemo } from "react";
 import { MediaRenderer, useActiveAccount, useReadContract } from "thirdweb/react";
 import client from "@/lib/client";
 import Skeleton from "@/components/Skeleton";
 import styles from "./NftCard2.module.css";
-import { NFT as NFTType } from "thirdweb";
+import { Address, defineChain, getContract, NFT as NFTType, ThirdwebContract } from "thirdweb";
 import { useSwipeable } from "react-swipeable";
 import Container from "../Container/Container";
 import profileStyles from "../../Style/profile.module.css";
@@ -15,14 +15,18 @@ import { NftAttributes } from "../token/Attributes";
 import { getContractMetadata } from "thirdweb/extensions/common";
 import CancelOfferButton from "../token/cancelOfferButton";
 import AcceptOfferButton from "../token/getOffers";
-import { DirectListing, EnglishAuction, Offer } from "thirdweb/extensions/marketplace";
-import { getNFT, ownerOf } from "thirdweb/extensions/erc721";
+import { getNFT, ownerOf, tokenURI } from "thirdweb/extensions/erc721";
 import ListingSection from "../token/listingButton";
 import axios from "axios";
-import { getContractInstance } from "@/const/cotractInstance";
+import { getContractInstance } from "@/const/contractInstanstGalerie";
 import ProfileImage from "../AccountGroup/ProfileImage";
 import { IotexPunksContract } from "@/const/contracts";
 import { NFT_CONTRACTS } from "@/const/nft.contracts";
+import { useMarketplaceData } from "@/Hooks/MarketProvider";
+import { ListingStatus } from "@/customDirectListing/DirectListingListingStatis";
+import VrmViewer from "../AccountGroup/VrmViewer";
+import Events from "../events/EventsNftCard";
+import EventsNFT from "../events/test";
 
 type NFTContract = typeof NFT_CONTRACTS[number];
 
@@ -39,6 +43,21 @@ const getPunkRank = (id: string) => {
   }
   return null;
 };
+
+interface DirectListing {
+  id: bigint;
+  creatorAddress: Address;
+  assetContractAddress: Address;
+  tokenId: bigint;
+  quantity: bigint;
+  currencyContractAddress: Address;
+  currencySymbol: string;
+  pricePerToken: string;
+  startTimeInSeconds: bigint;
+  endTimeInSeconds: bigint;
+  isReservedListing: boolean;
+  status: number;
+}
 
 interface Attribute {
   trait_type: string;
@@ -61,6 +80,15 @@ interface Rarities {
   Minion: RarityData;
 }
 
+type ContractMetadata = {
+  name: string;
+  description: string;
+  image: string;
+  animation_url?: string;
+  vrm_file?: string;
+  attributes: Attribute[];
+};
+
 const rarities: Rarities = {
   Giga: { APY: "25%", MiningRate: "80 SMTX daily" },
   Emperor: { APY: "25%", MiningRate: "50 SMTX daily" },
@@ -71,128 +99,197 @@ const rarities: Rarities = {
 };
 
 type INFTCardProps = {
-  tokenId?: bigint;
+  tokenId: bigint;
   contractAddresse?: string;
-  nft?: {
-    tokenId: bigint;
-    listing?: (DirectListing | EnglishAuction)[];
-    offers?: Offer[];
-  } | null;
-  overrideOnclickBehavior?: (nft: NFTType) => void;
-  refetchAllListings: () => void;
-  refetchAllAuctions: () => void;
-  refetchAllOffers: () => void;
+  chainId: number;
+ event: any[];
 };
 
 export const NFTCard: FC<INFTCardProps> = ({
   tokenId,
   contractAddresse,
-  nft,
-  overrideOnclickBehavior,
-  refetchAllListings,
-  refetchAllAuctions,
-  refetchAllOffers,
+  chainId,
+  event,
 }) => {
   const account = useActiveAccount();
-  const [currentNFT, setCurrentNFT] = useState<NFTType | null>(null);
+  const [tokenUriImage, setTokenURI] = useState<string>("");
+  const [currentNFT, setCurrentNFT] = useState<ContractMetadata>({
+    name: "",
+    description: "",
+    image: "",
+    attributes: [],
+  });
   const [showInfo, setShowInfo] = useState(false);
   const [ranking, setRanking] = useState<number | null>(null);
-  const [contract, setContract] = useState("");
   const [attributes, setAttributes] = useState<Attribute[]>([]);
   const [rarityInfo, setRarityInfo] = useState({ name: "", APY: "", returns: "" });
   const [punkRank, setPunkRank] = useState<string | null>(null);
   const [ownerAddress, setOwnerAddress] = useState<string | null>(null);
   const [activeContract, setActiveContract] = useState<NFTContract | null>(null);
+  const { validListings } = useMarketplaceData();
+  const [selectedTab, setSelectedTab] = useState<string>('image'); // Add state for selected tab
+  const [vrmFile, setVrmFile] = useState<File | null>(null); // State for VRM file
+  const [filteredEvents, setFilteredEvents] = useState<any[]>([]);
+
+  const directListing = useMemo(() =>
+    validListings?.find(
+      (l): l is DirectListing => l.assetContractAddress === contractAddresse && l.tokenId === tokenId
+    ),
+    [validListings, contractAddresse, tokenId]
+  );
+
+useEffect(() => {
+
+    // Filter events based on tokenId, contractAddress, and chainId
+
+    const events = event.filter((e: any) => e.token_id === tokenId.toString());
+
+    setFilteredEvents(events);
+
+  }, [tokenId, event]);
 
   const handlers = useSwipeable({
-    onSwipedLeft: () => setShowInfo(false),
-    trackMouse: true,
+    onSwipedLeft: (eventData) => {
+      const { initial, absX } = eventData;
+      const startY = initial[1]; // Y-coordinate of where the swipe starts
+      const screenHeight = window.innerHeight;
+      
+      // Allow swiping only in the top 20% of the display
+      const swipeThreshold = screenHeight * 0.4;
+
+      // Prevent the swipe action if it starts outside the top 20%
+      if (startY > swipeThreshold) {
+        return;
+      }
+
+      // Prevent closing if the user is scrolling horizontally in a scrollable element
+      if (document.activeElement?.classList.contains('scrollable')) {
+        return;
+      }
+
+      // Proceed with the swipe action
+      setShowInfo(false);
+    },
+    trackMouse: true, // Enable mouse tracking for swipe simulation
   });
 
-  const fetchNFTData = useCallback(async () => {
-    if (!nft && !tokenId && !contractAddresse) return;
+  const NETWORK = defineChain(chainId);
 
+  const contract: ThirdwebContract = getContract({
+    address: contractAddresse || "",
+    client,
+    chain: NETWORK,
+  });
+
+  const handleReadNft = async () => {
     try {
-      let nftData: NFTType | null = null;
-      let contractAddress = contractAddresse || "";
+      const owner = await ownerOf({ contract, tokenId });
+      const tokenUri = await tokenURI({ contract, tokenId });
 
-      if (nft) {
-        contractAddress = nft.listing?.[0]?.assetContractAddress || "";
-      }
+      let metadataUrl;
 
-      const id = nft?.tokenId || tokenId;
-      if (!id) return;
+      if (typeof tokenUri === 'string') {
+        if (tokenUri.startsWith("ipfs://")) {
+          const gatewayUrl = tokenUri.replace("ipfs://", "https://ipfs.io/ipfs/");
+          metadataUrl = `https://nieuwe-map-5.vercel.app/metadata?url=${encodeURIComponent(gatewayUrl)}`;
+        } else if (tokenUri.startsWith("data:")) {
+          const base64Data = tokenUri.split(",")[1];
+          const decodedData = Buffer.from(base64Data, 'base64').toString('utf-8');
+          const metadata = JSON.parse(decodedData);
 
-      if (contractAddress === "0xce300b00aa9c066786D609Fc96529DBedAa30B76") {
-        const metadataUrl = `https://nieuwe-map-5.vercel.app/proxy/${id.toString()}`;
-        const response = await axios.get(metadataUrl);
-        const metadata = response.data;
+          const proxyImageUrl = `https://nieuwe-map-5.vercel.app/metadataImage?url=${encodeURIComponent(metadata.image)}`;
 
-        nftData = {
-          metadata,
-          owner: null,
-          id: id,
-          tokenURI: metadataUrl,
-          type: "ERC721",
-        } as NFTType;
-
-        // Fetch owner using ownerOf function
-        const owner = await ownerOf({ contract: IotexPunksContract, tokenId: id });
-        setOwnerAddress(owner);
-
-      } else {
-        const contractInstance = getContractInstance(contractAddress);
-        const contractMetadata = await getContractMetadata({ contract: contractInstance });
-        nftData = await getNFT({
-          contract: contractInstance,
-          tokenId: id,
-          includeOwner: true,
-        });
-
-        if (contractAddress === "0x0c5AB026d74C451376A4798342a685a0e99a5bEe") {
-          nftData = {
-            ...nftData,
-            metadata: {
-              name: nftData.metadata.name || "MachineFi NFT",
-              description: nftData.metadata.description || "The MachineFi NFT.",
-              image: "ipfs://QmdLtnJRPzSFNpeZSfCSbh7YEDyyJniokRYtZwdRvfESak/Schermafbeelding%202024-06-14%20153107.png",
-            } as NFTMetadata,
+          const NftMetadata = {
+            id: metadata.id || tokenId,
+            name: metadata.name || "Unknown Name",
+            description: metadata.description || "No Description",
+            image: proxyImageUrl,
+            attributes: metadata.attributes || "",
+            animation_url: metadata.animation_url || "",
+            vrm_file: metadata.vrm_url || ""
           };
-        }
-        setContract(contractMetadata.name);
-        setOwnerAddress(nftData.owner);
-      }
 
-      setCurrentNFT(nftData);
-
-      if (contractAddress === "0xc52121470851d0cba233c963fcbb23f753eb8709") {
-        const ranking = getRanking(id.toString());
-        setRanking(ranking);
-      } else {
-        setRanking(null);
-      }
-
-      if (contractAddress === "0xce300b00aa9c066786D609Fc96529DBedAa30B76") {
-        const rank = getPunkRank(id.toString());
-        if (rank !== null) {
-          setPunkRank(rank.toString());
+          setCurrentNFT(NftMetadata);
+          setOwnerAddress(owner);
+          setTokenURI(tokenUri);
+          return;
         } else {
-          setPunkRank(null);
+          try {
+            const metadata = JSON.parse(tokenUri);
+
+            const proxyImageUrl = `https://nieuwe-map-5.vercel.app/metadataImage?url=${encodeURIComponent(metadata.image)}`;
+
+            const NftMetadata = {
+              id: metadata.id || tokenId,
+              name: metadata.name || "Unknown Name",
+              description: metadata.description || "No Description",
+              image: proxyImageUrl,
+              attributes: metadata.attributes || "",
+              animation_url: metadata.animation_url || "",
+              vrm_file: metadata.url || ""
+            };
+
+            setCurrentNFT(NftMetadata);
+            setOwnerAddress(owner);
+            setTokenURI(tokenUri);
+            return;
+          } catch (error) {
+            metadataUrl = `https://nieuwe-map-5.vercel.app/metadata?url=${encodeURIComponent(tokenUri)}`;
+          }
+        }
+
+        const response = await axios.get(metadataUrl);
+
+        if (response.data) {
+          const NftMetadata = {
+            id: response.data.id || tokenId,
+            name: response.data.name || "Unknown Name",
+            description: response.data.description || "No Description",
+            image: response.data.image,
+            attributes: response.data.attributes || "",
+            animation_url: response.data.animation_url || "",
+            vrm_file: response.data.vrm_url || ""
+          };
+
+          setCurrentNFT(NftMetadata);
+          setOwnerAddress(owner);
+          setTokenURI(tokenUri);
+
+          if (contractAddresse === "0xc52121470851d0cba233c963fcbb23f753eb8709") {
+            const ranking = getRanking(tokenId.toString());
+            setRanking(ranking);
+          } else {
+            setRanking(null);
+          }
+
+          if (contractAddresse === "0xce300b00aa9c066786D609Fc96529DBedAa30B76") {
+            const rank = getPunkRank(tokenId.toString());
+            if (rank !== null) {
+              setPunkRank(rank.toString());
+            } else {
+              setPunkRank(null);
+            }
+          } else {
+            setPunkRank(null);
+          }
+        } else {
+          console.error("Invalid metadata response:", response.data);
         }
       } else {
-        setPunkRank(null);
+        console.error("Invalid token URI format:", tokenUri);
       }
     } catch (error) {
+      console.error("Error fetching metadata:", error);
     }
-  }, [nft, tokenId, contractAddresse]);
+  };
 
   useEffect(() => {
-    fetchNFTData();
-  }, [fetchNFTData]);
+    handleReadNft();
+  }, [contractAddresse]);
 
   useEffect(() => {
-    if (currentNFT && currentNFT.metadata && Array.isArray(currentNFT.metadata.attributes)) {
-      const rarityAttribute = currentNFT.metadata.attributes.find(attr =>
+    if (currentNFT && currentNFT && Array.isArray(currentNFT.attributes)) {
+      const rarityAttribute = currentNFT.attributes.find(attr =>
         Object.keys(rarities).some(rarityKey => attr.trait_type.includes(rarityKey))
       );
 
@@ -224,22 +321,29 @@ export const NFTCard: FC<INFTCardProps> = ({
     }
   }, [currentNFT]);
 
+
+
+  
+  const handleCloseInfo = () => {
+    setShowInfo(false);
+    setVrmFile(null); // Clean up VRM file when modal is closed
+  };
+
   return (
     <div className={styles.nftCard} onClick={() => setShowInfo(true)} role="button" aria-label="Show more info">
       {account && ownerAddress === account.address && (
         <div>
-          <button onClick={() => {/* Add SetProfile function */}} className={styles.ProfileButton}>
-            {/* Add icon or text here */}
-          </button>
+         
         </div>
       )}
 
       {currentNFT ? (
         <>
-          <MediaRenderer src={currentNFT.metadata.image} client={client} className={styles.nftImage} />
+                    <MediaRenderer src={currentNFT.image || tokenUriImage} client={client} className={styles.nftImage} />
+
           {contractAddresse !== "0xc52121470851d0cba233c963fcbb23f753eb8709" && (
             <div>
-              <p className={profileStyles.collectionName}>Token ID #{currentNFT.id.toString()}</p>
+              <p className={profileStyles.collectionName}>Token ID #{tokenId.toString()}</p>
             </div>
           )}
           {contractAddresse === "0xc52121470851d0cba233c963fcbb23f753eb8709" && ranking && (
@@ -256,34 +360,32 @@ export const NFTCard: FC<INFTCardProps> = ({
             <Container maxWidth="md">
               <div {...handlers} className="fixed inset-0 bg-gray-900 bg-opacity-75 flex justify-center items-start pt-20 overflow-auto z-50 sm:items-center" style={{ marginTop: '55px' }}>
                 <div className="container max-w-3xl mx-auto p-9 rounded-lg shadow-lg mb-20 bg-[#181818] max-h-[80vh] overflow-y-auto">
-                {activeContract?.title && activeContract.title !== "" && (
+                  {activeContract?.title && activeContract.title !== "" && (
                     <a>This Nft is from {activeContract.title} Collection
-                      
                     </a>
                   )}
-                  <div className={styles.nftCard}>
-                    {currentNFT?.metadata ? (
-                      <MediaRenderer src={currentNFT.metadata.image} client={client} className="object-cover object-center" />
-                    ) : (
-                      <p>NFT metadata not available.</p>
-                    )}
+                  <div className={styles.tabs}>
+                  {currentNFT.image&& (
+
+              <MediaRenderer src={currentNFT.image || tokenUriImage} client={client} className={styles.nftImage} />
+                  )}
                   </div>
                   <div className={profileStyles.title}>
-                    {account && ownerAddress === account.address && !nft?.listing && (
+                    {account && ownerAddress === account.address && !directListing && (
                       <p>You&apos;re about to list the following item for sale.</p>
                     )}
 
-                    {account && ownerAddress === account.address && nft?.listing && (
+                    {account && ownerAddress === account.address && directListing && (
                       <p>You&apos;re about to delist the Nft from the marketplace.</p>
                     )}
 
-                    {account && ownerAddress !== account.address && nft?.listing && (
+                    {account && ownerAddress !== account.address && directListing && (
                       <p>You&apos;re about to Buy the following item from the Marketplace.</p>
                     )}
 
-                    <h1 className={profileStyles.title}>{currentNFT?.metadata.name}</h1>
+                    <h1 className={profileStyles.title}>{currentNFT?.name}</h1>
                     {contractAddresse !== "0xc52121470851d0cba233c963fcbb23f753eb8709" && (
-                      <p className={profileStyles.collectionName}>Token ID #{currentNFT?.id.toString()}</p>
+                      <p className={profileStyles.collectionName}>Token ID #{tokenId.toString()}</p>
                     )}
                     {contractAddresse === "0xc52121470851d0cba233c963fcbb23f753eb8709" && ranking && (
                       <p className={profileStyles.collectionName}>Rank #{ranking}</p>
@@ -303,7 +405,7 @@ export const NFTCard: FC<INFTCardProps> = ({
 
                   <div>
                     <h3 className="text-white text-xl font-bold">Description</h3>
-                    <p className="text-white">{currentNFT.metadata.description}</p>
+                    <p className="text-white">{currentNFT.description}</p>
                     <p className="text-white">ContractAddress </p>
                     <p className="text-white">{contractAddresse}</p>
                     <p className="text-white">Current Owner </p>
@@ -312,49 +414,35 @@ export const NFTCard: FC<INFTCardProps> = ({
                   </div>
 
                   <div>
-                    {currentNFT && nft?.listing && (
+                    {currentNFT && directListing && (
                       <NftInformation
-                        contractAddress={nft.listing[0].assetContractAddress || ''}
-                        tokenId={nft.tokenId}
-                        nft={nft}
-                        refetchAllListings={refetchAllListings}
-                        refetchAllAuctions={refetchAllAuctions}
+                        contractAddress={directListing.assetContractAddress || ''}
+                        tokenId={directListing.tokenId}
                       />
                     )}
 
-                    {!nft   &&account && ownerAddress === account.address &&  (
+                    {!directListing && account && ownerAddress === account.address && (
                       <ListingSection
                         contractAddress={contractAddresse || ""}
                         tokenId={tokenId?.toString()}
-                        nft={nft}
-                        refetchAllListings={refetchAllListings}
-                        refetchAllAuction={refetchAllAuctions}
-                        refetchAllOffers={refetchAllOffers}
                       />
                     )}
 
-                    {account && ownerAddress === account.address && nft?.listing && (
+                    {account && ownerAddress === account.address && directListing && (
                       <CancelListingButton
                         account={account}
-                        listingId={nft.listing[0].id}
-                        refetchAllListings={refetchAllListings}
+                        listingId={directListing?.id}
                       />
                     )}
-                    {account?.address && nft?.offers && nft?.offers.length > 0 && (
-                      <>
-                        {nft.offers.map((offer) => (
-                          <div key={offer.id}>
-                            <CancelOfferButton account={account} offer={offer} refetchAllOffers={refetchAllOffers} />
-                            <AcceptOfferButton account={account} offer={offer} refetchAllOffers={refetchAllOffers} />
-                          </div>
-                        ))}
-                      </>
-                    )}
 
-                    {currentNFT?.metadata && contractAddresse && (
+                    {currentNFT && contractAddresse && (
                       <NftAttributes nft={currentNFT} contractAddress={contractAddresse} />
                     )}
                   </div>
+                  {currentNFT && contractAddresse && (
+
+                  <EventsNFT contractAddress={contractAddresse} chainId={chainId} tokenId={tokenId}  />
+                )}
                 </div>
               </div>
             </Container>

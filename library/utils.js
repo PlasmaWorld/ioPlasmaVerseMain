@@ -8,6 +8,9 @@ import { combine } from './merge-geometry';
 import { VRMLoaderPlugin, VRMUtils } from '@pixiv/three-vrm';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { VRMHumanBoneName, VRMHumanBoneParentMap } from '@pixiv/three-vrm';
+import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUtils';
+
+const sRGBEncoding = THREE.sRGBEncoding;
 
 export function getAsArray(target) {
   if (target == null) return [];
@@ -19,8 +22,8 @@ export async function setTextureToChildMeshes(scene, url) {
 
   // Load the image as a texture
   const texture = await textureLoader.load(url);
-  texture.encoding = THREE.sRGBEncoding; // Ensure sRGBEncoding is used
-  texture.flipY = false
+  texture.encoding = sRGBEncoding; // Ensure sRGBEncoding is used
+  texture.flipY = false;
 
   // Traverse through the child meshes in the scene
   scene.traverse((object) => {

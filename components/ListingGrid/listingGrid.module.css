@@ -1,0 +1,20 @@
+.nftContainer {
+    width: 100%;
+    max-width: 1000px;
+    height: 600px;
+    overflow: auto;
+    box-sizing: border-box;
+  }
+  
+  .nftGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  
+  @media (max-width: 768px) {
+    .nftGrid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  

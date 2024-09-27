@@ -1,18 +1,12 @@
 "use client";
 
-import {
-  DirectListing,
-  EnglishAuction,
-  Offer,
-  getAllValidAuctions,
-  getAllValidListings,
-  getAllValidOffers,
-} from "thirdweb/extensions/marketplace";
-import { NFT as NFTType, ThirdwebContract } from "thirdweb";
-import React, { Suspense, useState, useEffect } from "react";
-import { MARKETPLACE } from "../../const/contracts";
-import NFTGrid, { NFTGridLoading } from "../NFT/NFTGrid";
-import { useReadContract } from "thirdweb/react";
+import React, { useState, useEffect } from "react";
+import { getContract, ThirdwebContract, NFT as NFTType } from "thirdweb";
+import { useMarketplaceData } from "@/Hooks/MarketProvider";
+import { NFTCard } from "../NFT/NftCardMarketplace";
+import { Address } from "thirdweb";
+import styles from "./listingGrid.module.css";
+import { ListingStatus } from "@/customDirectListing/DirectListingListingStatis";
 
 type Props = {
   marketplace: ThirdwebContract;
@@ -21,85 +15,92 @@ type Props = {
   emptyText: string;
 };
 
+interface DirectListing {
+  id: bigint;
+  creatorAddress: Address;
+  assetContractAddress: Address;
+  tokenId: bigint;
+  quantity: bigint;
+  currencyContractAddress: Address;
+  currencySymbol: string;
+  pricePerToken: string;
+  startTimeInSeconds: bigint;
+  endTimeInSeconds: bigint;
+  isReservedListing: boolean;
+  status: number;
+}
+
+interface EnglishAuction {
+  id: bigint;
+  creatorAddress: Address;
+  assetContractAddress: Address;
+  tokenId: bigint;
+  quantity: bigint;
+  currencyContractAddress: Address;
+  minimumBidAmount: bigint;
+  minimumBidCurrencyValue: string;
+  buyoutBidAmount: bigint;
+  buyoutCurrencyValue: string;
+  timeBufferInSeconds: bigint;
+  bidBufferBps: bigint;
+  startTimeInSeconds: bigint;
+  endTimeInSeconds: bigint;
+  status: ListingStatus;
+}
+
+type NFTData = {
+  tokenId: bigint;
+  contractAddress: `0x${string}`;
+  listing?: DirectListing;
+  auction?: EnglishAuction;
+};
+
 export default function ListingGrid(props: Props) {
-  const [nftDataListing, setNftDataListing] = useState<DirectListing[]>([]);
-  const [nftDataAuction, setNftDataAuction] = useState<EnglishAuction[]>([]);
-  const [nftDataOffer, setNftDataOffer] = useState<Offer[]>([]);
+  const [nftData, setNftData] = useState<NFTData[]>([]);
+  const [activeTab, setActiveTab] = useState<'listings' | 'auctions'>('listings');
 
-  const {
-    data: allValidListings,
-    isLoading: isLoadingValidListings,
-    refetch: refetchAllListings,
-    isRefetching: isRefetchingAllListings,
-  } = useReadContract(getAllValidListings, {
-    contract: MARKETPLACE,
-  });
-
-  const {
-    data: allValidAuctions,
-    isLoading: isLoadingValidAuctions,
-    refetch: refetchAllAuctions,
-    isRefetching: isRefetchingAllAuctions,
-  } = useReadContract(getAllValidAuctions, {
-    contract: MARKETPLACE,
-  });
-
-  const {
-    data: allValidOffers,
-    isLoading: isLoadingValidOffers,
-    refetch: refetchAllOffers,
-    isRefetching: isRefetchingAllOffers,
-  } = useReadContract(getAllValidOffers, {
-    contract: MARKETPLACE,
-  });
+  const { validListings, validAuctions } = useMarketplaceData();
 
   useEffect(() => {
     const fetchData = async () => {
-      await refetchAllListings();
-      await refetchAllAuctions();
-      await refetchAllOffers();
+      const listingsData = validListings.map(listing => ({
+        tokenId: listing.tokenId,
+        contractAddress: listing.assetContractAddress,
+        listing,
+      }));
+
+      const auctionsData = validAuctions.map(auction => ({
+        tokenId: auction.tokenId,
+        contractAddress: auction.assetContractAddress,
+        auction,
+      }));
+
+      setNftData([...listingsData, ...auctionsData]);
     };
+
     fetchData();
-  }, [refetchAllListings, refetchAllAuctions, refetchAllOffers]);
-
-  if (isLoadingValidListings || isLoadingValidAuctions || isLoadingValidOffers) {
-    return <NFTGridLoading />;
-  }
-
-  if (!allValidListings || !allValidAuctions || !allValidOffers) {
-    return <div>{props.emptyText}</div>;
-  }
-
-  const tokenIds = Array.from(
-    new Set([
-      ...allValidListings.filter((l) => l.assetContractAddress).map((l) => l.tokenId),
-      ...allValidAuctions.filter((a) => a.assetContractAddress).map((a) => a.tokenId),
-      ...allValidOffers.filter((a) => a.assetContractAddress).map((a) => a.tokenId),
-    ])
-  );
-
-  const nftData = tokenIds.map((tokenId) => {
-    const directListings = allValidListings.filter((listing) => listing.tokenId === tokenId);
-    const auctionListings = allValidAuctions.filter((listing) => listing.tokenId === tokenId);
-    const directOffers = allValidOffers.filter((offer) => offer.tokenId === tokenId);
-
-    return {
-      tokenId: tokenId,
-      listing: [...directListings, ...auctionListings],
-      offers: directOffers,
-    };
-  });
+  }, [validListings, validAuctions]);
 
   return (
-    <Suspense fallback={<NFTGridLoading />}>
-      <NFTGrid
-        nftData={nftData}
-        emptyText={props.emptyText}
-        overrideOnclickBehavior={props.overrideOnclickBehavior}
-        refetchAllListings={refetchAllListings}
-        refetchAllAuctions={refetchAllAuctions}
-        refetchAllOffers={refetchAllOffers}
-      />
-    </Suspense>
+    <div>
+      <div style={{ marginBottom: '20px' }}>
+        <button onClick={() => setActiveTab('listings')}>Direct Listings</button>
+        <button onClick={() => setActiveTab('auctions')}>Auctions</button>
+      </div>
+      <div className={styles.nftContainer}>
+        <div className={styles.nftGrid}>
+          {nftData
+            .filter(data => activeTab === 'listings' ? data.listing : data.auction)
+            .map(data => (
+              <NFTCard
+                key={data.tokenId.toString()}
+                tokenId={data.tokenId}
+                contractAddresse={data.contractAddress.toString()}
+                chainId={4689}
+              />
+            ))}
+        </div>
+      </div>
+    </div>
   );
 }

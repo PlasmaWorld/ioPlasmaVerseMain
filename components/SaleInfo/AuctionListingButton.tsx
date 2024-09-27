@@ -8,21 +8,19 @@ import { MARKETPLACE, NFT_COLLECTION } from "@/const/contracts";
 import toastStyle from "@/util/toastConfig";
 
 export default function AuctionListingButton({
-  nft,
+  tokenId,
   minimumBidAmount,
   buyoutBidAmount,
   auctionStart,
   auctionEnd,
   contractAddress,
-  refetchAllListings,
 }: {
-  nft: NFTType;
+  tokenId: bigint;
   minimumBidAmount: string;
   buyoutBidAmount: string;
   auctionStart: string;
   auctionEnd: string;
   contractAddress: string;
-  refetchAllListings: () => void;
 }) {
  
   const router = useRouter();
@@ -41,7 +39,7 @@ export default function AuctionListingButton({
         return createAuction({
           contract: MARKETPLACE,
           assetContractAddress: address,
-          tokenId: nft.id,
+          tokenId: tokenId,
           minimumBidAmount,
           buyoutBidAmount,
           startTimestamp: new Date(auctionStart),
@@ -70,7 +68,6 @@ export default function AuctionListingButton({
           style: toastStyle,
           position: "bottom-center",
         });
-        await refetchAllListings();
         router.refresh();
       }}
     >

@@ -40,122 +40,104 @@ const ProfileImage: React.FC<ProfilePageProps> = ({ ownerAddresse }) => {
   const [userName, setUserName] = useState<string>('');
   const [attributes, setAttributes] = useState<Record<string, any> | undefined>(undefined);
 
+  const fetchNFTData = useCallback(async (tokenId: string) => {
+    if (tokenId) {
+      try {
+        const contract = ChattApp;
 
+        // Fetch contract metadata
+        const contractMetadata = await getContractMetadata({ contract });
+        const contractName = contractMetadata.name;
+
+        // Fetch NFT data
+        const nftData = await getNFT({
+          contract,
+          tokenId: BigInt(tokenId),
+          includeOwner: true,
+        });
+
+
+        if (nftData && nftData.metadata) {
+          const metadata = nftData.metadata as any;
+          if (metadata.attributes) {
+            setAttributes(metadata.attributes);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching NFT:", error);
+      }
+    }
+  }, []);
 
   // Get the contract
   const fetchUserInfo = useCallback(async (signerAddress: string | undefined, contract: ThirdwebContract) => {
-      if (!signerAddress) return;
-      setIsLoading(true);
-      console.log("Fetching user info started for signerAddress:", signerAddress);
-      try {
-          const userInfo = await readContract({
-              contract,
-              method: resolveMethod("getUserInfo"),
-              params: [signerAddress]
-          }) as unknown as any[];
+    if (!signerAddress) return;
+    setIsLoading(true);
+    try {
+      const userInfo = await readContract({
+        contract,
+        method: resolveMethod("getUserInfo"),
+        params: [signerAddress]
+      }) as unknown as any[];
 
-          console.log("Fetched user info:", userInfo);
 
-          if (userInfo && userInfo.length > 0) {
-              const tokenId = BigNumber.from(userInfo[0]).toString();
-              const userName = userInfo[1];
-              const timestamp = new Date(BigNumber.from(userInfo[2]).toNumber() * 1000).toLocaleString();
+      if (userInfo && userInfo.length > 0) {
+        const tokenId = BigNumber.from(userInfo[0]).toString();
+        const userName = userInfo[1];
+        const timestamp = new Date(BigNumber.from(userInfo[2]).toNumber() * 1000).toLocaleString();
 
-              
-
-              // Fetch NFT data using the tokenId
-              fetchNFTData(tokenId);
-          } else {
-             
-          }
-      } catch (error) {
-          console.error("Error fetching user info:", error);
-         
-      } finally {
-          setIsLoading(false);    
+        // Fetch NFT data using the tokenId
+        fetchNFTData(tokenId);
+      } else {
+        setError("No user info found.");
       }
-  }, []);
-
-  
-  const fetchNFTData = useCallback(async (tokenId: string) => {
-      if (tokenId) {
-          console.log("Fetching NFT data started for tokenId:", tokenId);
-          try {
-              const contract = ChattApp;
-
-              // Fetch contract metadata
-              const contractMetadata = await getContractMetadata({ contract });
-              const contractName = contractMetadata.name;
-              console.log("Contract Name:", contractName);
-
-              // Fetch NFT data
-              const nftData = await getNFT({
-                  contract,
-                  tokenId: BigInt(tokenId),
-                  includeOwner: true,
-              });
-
-              console.log("Fetched NFT data:", nftData);
-
-              if (nftData && nftData.metadata) {
-                  const metadata = nftData.metadata as any;
-                  if (metadata.attributes) {
-                      setAttributes(metadata.attributes);
-                      console.log("NFT attributes:", metadata.attributes);
-                  } else {
-                      console.log("No attributes found in metadata.");
-                  }
-              }
-          } catch (error) {
-              console.error("Error fetching NFT:", error);
-          }
-      }
-  }, []);
+    } catch (error) {
+      console.error("Error fetching user info:", error);
+      setError("Failed to fetch user info.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [fetchNFTData]);
 
   useEffect(() => {
-      if (ownerAddresse) {
-          const signerAddress = ownerAddresse;
-          fetchUserInfo(signerAddress, ChattApp);
-      }
-  }, [ownerAddresse, fetchUserInfo, ChattApp]);
-
+    if (ownerAddresse) {
+      const signerAddress = ownerAddresse;
+      fetchUserInfo(signerAddress, ChattApp);
+    }
+  }, [ownerAddresse, fetchUserInfo]);
 
   const fetchUsername = useCallback(async (signerAddress: string | undefined, contract: ThirdwebContract) => {
     if (!signerAddress) return;
     setIsLoading(true);
     try {
-        const usernameData = await readContract({
-            contract,
-            method: resolveMethod("getUserInfo"),
-            params: [signerAddress]
-        }) as unknown as string[];
+      const usernameData = await readContract({
+        contract,
+        method: resolveMethod("getUserInfo"),
+        params: [signerAddress]
+      }) as unknown as string[];
 
-        if (usernameData && usernameData.length > 0) {
-            setUserName(usernameData[0]);
-
-        } else {
-            setUserName("Unknown user");
-        }
+      if (usernameData && usernameData.length > 0) {
+        setUserName(usernameData[0]);
+      } else {
+        setUserName("Unknown user");
+      }
     } catch (error) {
+      setError("Failed to fetch username.");
     } finally {
-        setIsLoading(false);
+      setIsLoading(false);
     }
-}, []);
-  const account = ownerAddresse;
-  
+  }, []);
 
-  console.log("Profile Address:", ownerAddresse); // Debugging line
+  const account = ownerAddresse;
 
   const fetchUserProfile = useCallback(async (signerAddress: string | undefined, contract: ThirdwebContract) => {
     if (!signerAddress) return;
     try {
-      console.log("Fetching profile image for:", signerAddress);
       const imageUrl = await readContract({
         contract,
         method: resolveMethod("getActiveProfileImage"),
         params: [signerAddress]
       }) as unknown as string;
-      console.log("Profile image fetched:", imageUrl);
 
       if (imageUrl.startsWith("ipfs://")) {
         const ipfsData = await fetchIPFSData(imageUrl);
@@ -165,7 +147,6 @@ const ProfileImage: React.FC<ProfilePageProps> = ({ ownerAddresse }) => {
       }
       setIsLoading(false);
     } catch (error) {
-      console.error('Error checking user existence:', error);
       setIsLoading(false);
     }
   }, []);
@@ -178,41 +159,36 @@ const ProfileImage: React.FC<ProfilePageProps> = ({ ownerAddresse }) => {
 
   useEffect(() => {
     if (account) {
-      console.log("Account address:", account);
       fetchUserProfile(account, AppMint);
       fetchUsername(account, ChattApp);
-
     } else {
       console.log("No account found");
     }
-  }, [account, fetchUserProfile]);
-
-  useEffect(() => {
-    console.log("NFT:", nft);
-  }, [nft]);
+  }, [account, fetchUserProfile, fetchUsername]);
 
   return (
     <div className="flex flex-col items-center justify-center pt-20px min-w-[120px] min-h-[180px]">
       {isLoading ? (
-        <div>Loading...</div>      ) : (
+        <div>Loading...</div>
+      ) : (
         <>
-            {ownedNftsProfile ? (
-              <Image
-                src={ownedNftsProfile.image}
-                alt="Profile"
-                className={styles.profilePicture}
-                width={125}
-                height={125}
-                style={{
-                  background: `linear-gradient(90deg, ${randomColor3}, ${randomColor4})`,
-                }} />
-            ) : (
-              <div
-                className={styles.profilePicture}
-                style={{
-                  background: `linear-gradient(90deg, ${randomColor3}, ${randomColor4})`,
-                }} />
-            )}
+          {ownedNftsProfile ? (
+            <Image
+              src={ownedNftsProfile.image}
+              alt="Profile"
+              className={styles.profilePicture}
+              width={125}
+              height={125}
+              style={{
+                background: `linear-gradient(90deg, ${randomColor3}, ${randomColor4})`,
+              }} />
+          ) : (
+            <div
+              className={styles.profilePicture}
+              style={{
+                background: `linear-gradient(90deg, ${randomColor3}, ${randomColor4})`,
+              }} />
+          )}
 
           <button
             onClick={() => setModalOpen(true)}
@@ -224,38 +200,36 @@ const ProfileImage: React.FC<ProfilePageProps> = ({ ownerAddresse }) => {
           <div className="text-white font-bold text-center text-md md:text-lg">{userName}</div>
           {modalOpen && <UserCard onClose={() => setModalOpen(false)} ownerAddress={ownerAddresse} />}
 
-         
-
           {error && <div className="text-red-500">{error}</div>}
         </>
       )}
       {attributes && (
-    <>
-        <div className="flex flex-col items-center justify-center">
+        <>
+          <div className="flex flex-col items-center justify-center">
             <span className="text-xl md:text-2xl font-bold text-white">
-                {attributes.userName}
+              {attributes.userName}
             </span>
-           
+
             <div className="flex justify-center mt-sm">
-                {attributes.twitter && (
-                    <a href={attributes.twitter} target="_blank" rel="noopener noreferrer" className="mx-2">
-                        <FaTwitter />
-                    </a>
-                )}
-                {attributes.telegram && (
-                    <a href={attributes.telegram} target="_blank" rel="noopener noreferrer" className="mx-2">
-                        <FaTelegram />
-                    </a>
-                )}
-                {attributes.website && (
-                    <a href={attributes.website} target="_blank" rel="noopener noreferrer" className="mx-2">
-                        <FaGlobe />
-                    </a>
-                )}
+              {attributes.twitter && (
+                <a href={attributes.twitter} target="_blank" rel="noopener noreferrer" className="mx-2">
+                  <FaTwitter />
+                </a>
+              )}
+              {attributes.telegram && (
+                <a href={attributes.telegram} target="_blank" rel="noopener noreferrer" className="mx-2">
+                  <FaTelegram />
+                </a>
+              )}
+              {attributes.website && (
+                <a href={attributes.website} target="_blank" rel="noopener noreferrer" className="mx-2">
+                  <FaGlobe />
+                </a>
+              )}
             </div>
           </div>
         </>
-    )}
+      )}
     </div>
   );
 };

@@ -21,8 +21,8 @@ export const Footer: FC<IProps> = ({
         <div>
             <footer className="footer footer-center py-24 lg:py-32 text-white rounded">
                 <div className="grid grid-flow-col gap-4 text-white font-semibold text-lg">
-                    <a href='/buy' className="link link-hover px-5 py-2 border border-sky-500 border-opacity-20 rounded-full">Buy a PlasmaWorld</a>
-                    <a href='/sell' className="link link-hover px-5 py-2 border border-sky-500 border-opacity-20 rounded-full">Sell</a>
+                    <a href='/buy' className="link link-hover px-5 py-2 border border-sky-500 border-opacity-20 rounded-full">Buy on ioPlasmaVerse</a>
+                    <a href='/NftGalerie' className="link link-hover px-5 py-2 border border-sky-500 border-opacity-20 rounded-full">NftGalerie</a>
                 </div>
 
                 <div className="grid grid-flow-col gap-4">

@@ -1,0 +1,91 @@
+/* transaction.module.css */
+
+.container {
+  width: 100%;
+  margin-top: 1rem;
+  overflow-x: auto; /* Allow horizontal scrolling */
+}
+.flex {
+  display: flex;
+}
+
+.tableContainer {
+  display: flex;
+  justify-content: left;
+
+  width: 100%;
+  height: 100%;
+  overflow: auto; 
+}
+.transaction {
+  width: 100%; /* Add horizontal scroll */
+}
+
+.table {
+  width: 100%; /* Minimum width for the table */
+  text-align: left; /* Left align content */
+  white-space: nowrap; /* Prevent wrapping */
+}
+
+.tableHead {
+  background-color: #4a5568; /* gray-700 */
+  color: rgb(255, 255, 255); /* white/60 */
+  font-weight: 600;
+  position: sticky;
+  top: 0; /* Sticky header */
+  z-index: 1; /* Ensure header is above content */
+}
+
+.tableRowOdd {
+  background-color: #2d3748; /* gray-800 */
+}
+
+.tableRowEven {
+  background-color: #4a5568; /* gray-700 */
+}
+
+.tableCell {
+  padding: 0.5rem; /* Similar to Tailwind 'p-2' */
+}
+
+@media (max-width: 640px) {
+  .container {
+    overflow-x: scroll;
+
+  }
+
+  .tableContainer {
+    justify-content: left;
+  }
+
+  .table {
+    width: auto; /* Allow table to adjust to content */
+    min-width: 100%; /* Ensure it fills the screen */
+  }
+
+  .tableCell:first-child {
+    min-width: 150px; /* Ensure transaction hash is visible */
+  }
+
+  .tableCell {
+    text-align: left; /* Align text to the left */
+  }
+}
+
+.underlineButton {
+  text-decoration: underline;
+  color: #ffffff; /* blue-500 */
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1rem;
+}
+
+.noEvents {
+  color: #fff;
+}

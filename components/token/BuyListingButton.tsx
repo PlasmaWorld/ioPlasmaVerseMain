@@ -1,23 +1,54 @@
 "use client";
 import { TransactionButton, useActiveAccount } from "thirdweb/react";
 import {
-  DirectListing,
-  EnglishAuction,
-  buyFromListing,
+    buyFromListing,
   buyoutAuction,
 } from "thirdweb/extensions/marketplace";
 import { MARKETPLACE } from "@/const/contracts";
 import toastStyle from "@/util/toastConfig";
 import toast from "react-hot-toast";
+import { Address } from "thirdweb";
+import { ListingStatus } from "@/customDirectListing/DirectListingListingStatis";
+import { fetchEvents } from "@/lib/fetchedEvents2";
+interface EnglishAuction {
+  id: bigint;
+  creatorAddress: Address;
+  assetContractAddress: Address;
+  tokenId: bigint;
+  quantity: bigint;
+  currencyContractAddress: Address;
+  minimumBidAmount: bigint;
+  minimumBidCurrencyValue: string;
+  buyoutBidAmount: bigint;
+  buyoutCurrencyValue: string;
+  timeBufferInSeconds: bigint;
+  bidBufferBps: bigint;
+  startTimeInSeconds: bigint;
+  endTimeInSeconds: bigint;
+  status: ListingStatus;
+}
 
+interface DirectListing {
+  id: bigint;
+  creatorAddress: Address;
+  assetContractAddress: Address;
+  tokenId: bigint;
+  quantity: bigint;
+  currencyContractAddress: Address;
+  currencySymbol: string;
+  pricePerToken: string;
+  startTimeInSeconds: bigint;
+  endTimeInSeconds: bigint;
+  isReservedListing: boolean;
+  status: number;
+}
 export default function BuyListingButton({
   auctionListing,
   directListing,
-  refetchAllListings,
+
 }: {
   auctionListing?: EnglishAuction;
   directListing?: DirectListing;
-  refetchAllListings: () => void;
 }) {
   const account = useActiveAccount();
 
@@ -68,6 +99,7 @@ export default function BuyListingButton({
         });
       }}
       onTransactionConfirmed={async (txResult) => {
+
         console.log("Transaction confirmed with result:", txResult);
         toast("Purchased Successfully!", {
           icon: "🥳",
@@ -76,7 +108,6 @@ export default function BuyListingButton({
           position: "bottom-center",
         });
         // Refetch the data after transaction confirmation
-        await refetchAllListings();
       }}
     >
       Buy with Iotex Now

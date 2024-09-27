@@ -26,15 +26,7 @@ import { useUser } from "@/Hooks/UserInteraction";
 
 type Props = {
   tokenId?: string;
-  contractAddress: string;
-  nft?: {
-    tokenId: bigint;
-    listing?: (DirectListing | EnglishAuction)[];
-    offers?: Offer[];
-  } | null;
-  refetchAllListings: () => void;
-  refetchAllAuction: () => void;
-  refetchAllOffers: () => void;
+  contractAddress: string;  
 };
 
 const INPUT_STYLES = "block w-full py-3 px-4 mb-4 bg-transparent border border-white text-base box-shadow-md rounded-lg mb-4";
@@ -45,7 +37,7 @@ const getRanking = (id: string) => {
   return rankingData ? rankingData.ranking : null;
 };
 
-const ListingSection = ({ contractAddress, nft, tokenId, refetchAllListings, refetchAllAuction, refetchAllOffers }: Props) => {
+const ListingSection = ({ contractAddress, tokenId }: Props) => {
   const account = useActiveAccount();
   const [showInfo, setShowInfo] = useState(false);
   const [ranking, setRanking] = useState<number | null>(null);
@@ -74,38 +66,7 @@ const ListingSection = ({ contractAddress, nft, tokenId, refetchAllListings, ref
   const address = MARKETPLACE.address as `0x${string}`;
 
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const contractInstance = getContractInstance(nft?.listing?.[0].assetContractAddress || contractAddress);
-        const contractMetadata = await getContractMetadata({ contract: contractInstance });
-        const nftData = await getNFT({
-          contract: contractInstance,
-          tokenId: BigInt(tokenId || nft?.tokenId || 0),
-          includeOwner: true,
-        });
-        const normalizedNFT = nft?.listing?.[0].assetContractAddress === "0x0c5AB026d74C451376A4798342a685a0e99a5bEe"
-          ? {
-              ...nftData,
-              metadata: {
-                name: nftData.metadata.name || "Default Name",
-                description: nftData.metadata.description || "Default Description",
-                image: "/MachinFi.mp4",
-              } as NFTMetadata,
-            }
-          : nftData;
-
-        setCurrentNFT(normalizedNFT);
-      } catch (error) {
-        console.error("Error fetching NFT:", error);
-      }
-    };
-
-    if (nft || tokenId && contractAddress) {
-      fetchData();
-    }
-  }, [nft, tokenId, contractAddress]);
-
+  
   const { data: ERC20Approvel } = useReadContract(allowance, {
     contract: ioShiba,
     owner: account?.address || ADDRESS_ZERO,
@@ -149,7 +110,7 @@ const ListingSection = ({ contractAddress, nft, tokenId, refetchAllListings, ref
       </div>
 
       <div className={cn(tab === "direct" ? "flex" : "hidden", "flex-col")}>
-        {hasApproval && currencyTab === "native" && currentNFT && (
+        {hasApproval && currencyTab === "native"  && (
           <div>
             <h4 className={styles.formSectionTitle}>When</h4>
             <legend className={styles.legend}>Listing Starts on</legend>
@@ -160,11 +121,10 @@ const ListingSection = ({ contractAddress, nft, tokenId, refetchAllListings, ref
             <input className={cn(INPUT_STYLES)} type="number" step={0.000001} value={directListingState.price} onChange={(e) => setDirectListingState({ price: e.target.value })} />
           </div>
         )}
-        {!hasApproval && currencyTab === "native" && <ApprovalButton contractAddress={validContractAddress} address={address} />}
-        {hasApproval && currencyTab === "native" && currentNFT && (
-          <DirectListingButton nft={currentNFT} pricePerToken={directListingState.price} listingStart={watchDirect("startDate")} listingEnd={watchDirect("endDate")} contractAddress={validContractAddress} refetchAllListings={refetchAllListings} />
+        {hasApproval && currencyTab === "native" && tokenId && (
+          <DirectListingButton tokenId={BigInt(tokenId)} pricePerToken={directListingState.price} listingStart={watchDirect("startDate")} listingEnd={watchDirect("endDate")} contractAddress={validContractAddress}  />
         )}
-        {hasApproval && currencyTab === "shiba" && currentNFT && (
+        {hasApproval && currencyTab === "shiba"  && (
           <div>
             <h4 className={styles.formSectionTitle}>When</h4>
             <legend className={styles.legend}>Listing Starts on</legend>
@@ -177,19 +137,18 @@ const ListingSection = ({ contractAddress, nft, tokenId, refetchAllListings, ref
         )}
         {!hasApproval && currencyTab === "shiba" &&  <ApprovalButton contractAddress={validContractAddress} address={address} />}
           
-        {hasApproval && currencyTab === "shiba" && currentNFT &&  (
+        {hasApproval && currencyTab === "shiba" && tokenId &&  (
           <DirectListingButtonShiba
-            nft={currentNFT}
+          tokenId={BigInt(tokenId)}
             pricePerToken={toUnits9(directListingState.price).toString()}
             listingStart={watchDirect("startDate")}
             listingEnd={watchDirect("endDate")}
             contractAddress={validContractAddress}
-            refetchAllListings={refetchAllListings}
           />
         
         )}
 
-        {hasApproval && currencyTab === "Depinny" && currentNFT && (
+        {hasApproval && currencyTab === "Depinny"  && (
           <div>
           <h4 className={styles.formSectionTitle}>When</h4>
           <legend className={styles.legend}>Listing Starts on</legend>
@@ -202,14 +161,13 @@ const ListingSection = ({ contractAddress, nft, tokenId, refetchAllListings, ref
         )}
         {!hasApproval && currencyTab === "Depinny" &&  <ApprovalButton contractAddress={validContractAddress} address={address} />}
           
-        {hasApproval && currencyTab === "Depinny" && currentNFT &&  (
+        {hasApproval && currencyTab === "Depinny"  && tokenId && (
           <DirectListingDeppiny
-            nft={currentNFT}
-            pricePerToken={directListingState.price}
+          tokenId={BigInt(tokenId)}   
+           pricePerToken={directListingState.price}
             listingStart={watchDirect("startDate")}
             listingEnd={watchDirect("endDate")}
             contractAddress={validContractAddress}
-            refetchAllListings={refetchAllListings}
           />
         )}
       </div>
@@ -227,8 +185,8 @@ const ListingSection = ({ contractAddress, nft, tokenId, refetchAllListings, ref
         {!hasApproval ? (
           <ApprovalButton contractAddress={validContractAddress} address={address} />
         ) : (
-          currentNFT && (
-            <AuctionListingButton nft={currentNFT} minimumBidAmount={auctionListingState.minimumBidAmount} buyoutBidAmount={auctionListingState.buyoutPrice} auctionStart={watchAuction("startDate")} auctionEnd={watchAuction("endDate")} contractAddress={validContractAddress} refetchAllListings={refetchAllAuction} />
+          tokenId && (
+            <AuctionListingButton tokenId={BigInt(tokenId)} minimumBidAmount={auctionListingState.minimumBidAmount} buyoutBidAmount={auctionListingState.buyoutPrice} auctionStart={watchAuction("startDate")} auctionEnd={watchAuction("endDate")} contractAddress={validContractAddress}  />
           )
         )}
       </div>

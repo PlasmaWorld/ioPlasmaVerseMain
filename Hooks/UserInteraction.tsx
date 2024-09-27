@@ -9,6 +9,7 @@ import { getNFT } from 'thirdweb/extensions/erc721';
 import { NFT as NFTType } from "thirdweb";
 import { BigNumber } from 'ethers';
 import { ChattApp } from '@/const/contracts';
+import { fetchioPlasmaMarketplace, fetchMimoMarketplace } from '@/lib/watchContractEvents';
 
 type UserContextType = {
     signerAddress?: string;
@@ -71,12 +72,15 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         console.error("Client is not initialized");
         return null;
     }
-
+    useEffect(() => {
+        fetchMimoMarketplace();
+        fetchioPlasmaMarketplace();
+      }, [fetchMimoMarketplace, fetchioPlasmaMarketplace]);
+      
     // Get the contract
     const fetchUserInfo = useCallback(async (signerAddress: string | undefined, contract: ThirdwebContract) => {
         if (!signerAddress) return;
         setIsLoading(true);
-        console.log("Fetching user info started for signerAddress:", signerAddress);
         try {
             const userInfo = await readContract({
                 contract,
@@ -84,7 +88,6 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
                 params: [signerAddress]
             }) as unknown as any[];
 
-            console.log("Fetched user info:", userInfo);
 
             if (userInfo && userInfo.length > 0) {
                 const tokenId = BigNumber.from(userInfo[0]).toString();
@@ -121,7 +124,6 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
                 params: [signerAddress]
             }) as unknown as boolean;
             setUserExists(exists);
-            console.log("userExists", { exists });
         } catch (error) {
             console.error('Error checking user existence:', error);
             setUserExists(false);
@@ -130,14 +132,12 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
 
     const fetchNFTData = useCallback(async (tokenId: string) => {
         if (tokenId) {
-            console.log("Fetching NFT data started for tokenId:", tokenId);
             try {
                 const contract = ChattApp;
 
                 // Fetch contract metadata
                 const contractMetadata = await getContractMetadata({ contract });
                 const contractName = contractMetadata.name;
-                console.log("Contract Name:", contractName);
 
                 // Fetch NFT data
                 const nftData = await getNFT({
@@ -146,7 +146,6 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
                     includeOwner: true,
                 });
 
-                console.log("Fetched NFT data:", nftData);
 
                 // Update state with fetched data
                 setNFT(nftData);
@@ -157,9 +156,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
                     const metadata = nftData.metadata as any;
                     if (metadata.attributes) {
                         setAttributes(metadata.attributes);
-                        console.log("NFT attributes:", metadata.attributes);
                     } else {
-                        console.log("No attributes found in metadata.");
                     }
                 }
             } catch (error) {

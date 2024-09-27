@@ -12,6 +12,20 @@
     margin: 10px;
     box-shadow: 0 4px 8px rgba(207, 201, 201, 0.764);
   }
+  .threejsContainer {
+    width: 105;
+    height: 300px;
+    position: relative;
+    background-color: rgba(255, 255, 255, 0.04);
+    transition: background-color 0.3s ease-in-out;
+    margin-top: 20px; /* Added margin to separate from the upload button */
+    z-index: 1020;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 8px rgba(207, 201, 201, 0.764);
+
+  }
   
   .ProfileButton {
     top: 1px;
@@ -175,4 +189,24 @@
     margin-bottom: 8px;
     color: #FFFFFF; 
   }
+  .tabs {
+    display: flex;
+    margin-bottom: 20px;
+  }
   
+  .tabs button {
+    background-color:   #f75454;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 10px 20px;
+    margin-right: 5px;
+    cursor: pointer;
+    outline: none;
+    transition: background-color 0.3s;
+  }
+  
+  .tabs button.active {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+  }

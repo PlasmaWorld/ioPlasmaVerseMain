@@ -1,0 +1,41 @@
+.contractCard {
+    border: 1px solid #ccc; /* Visible border */
+    border-radius: 8px; /* Rounded corners */
+    padding: 16px;
+    margin: 16px 0;
+    position: relative;
+    cursor: pointer;
+    background-color: rgba(255, 255, 255, 0.04);
+    transition: background-color 0.3s ease-in-out;
+  }
+  
+  .contractCard:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Elevation effect on hover */
+  }
+  
+  .chainIdBadge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background-color: #0070f3; /* Background color */
+    color: white; /* Text color */
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+  }
+  
+  .cardContent {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .contractTitle {
+    font-size: 20px;
+    margin-bottom: 8px;
+  }
+  
+  .contractDetails p {
+    margin: 4px 0;
+  }
+  

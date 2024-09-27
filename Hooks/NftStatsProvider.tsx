@@ -42,6 +42,7 @@ const contractsMap: Record<string, { contract: ThirdwebContract, totalSupply: nu
 };
 
 interface ContractData {
+  chainId: number;
   totalSupply: number;
   validTotalSupply: number;
   uniqueOwners: number;
@@ -62,37 +63,38 @@ export const ContractDataProvider: React.FC<ContractDataProviderProps> = ({ chil
   const [contractData, setContractData] = useState<Record<string, ContractData>>({});
   const [loading, setLoading] = useState<boolean>(true);
   const account = useActiveAccount();
+  const chainId = 4689;
   
   const fetchContractData = async () => {
     setLoading(true);
     try {
       const contractData: Record<string, ContractData> = {};
-
+  
       for (const [address, { contract, totalSupply }] of Object.entries(contractsMap)) {
         const data = await fetchTotalSupplys(contract, totalSupply, 50); // Adjust batchSize as needed
         if (data) {
           contractData[address] = data;
+  
+          // Send data to the API route to save/update it for each contract
+          const response = await fetch('/api/saveData', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ [address]: data }), // Send only the current contract data
+          });
+  
+          if (!response.ok) {
+            throw new Error(`Failed to save data for contract ${address}`);
+          }
+  
+          const result = await response.json();
+          console.log(`Save data result for ${address}:`, result);
         }
       }
-
+  
       setContractData(contractData);
-
-      // Send data to the API route to save/update it
-      const response = await fetch('/api/saveData', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(contractData),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to save data');
-      }
-
-      const result = await response.json();
-      console.log('Save data result:', result);
-
+  
     } catch (error) {
       console.error('Error fetching or saving contract data:', error);
       toast.error('Something went wrong while fetching your NFTs!', {
@@ -103,7 +105,13 @@ export const ContractDataProvider: React.FC<ContractDataProviderProps> = ({ chil
       setLoading(false);
     }
   };
+  
 
+  useEffect(() => {
+    if (account && account.address === "x0x515D1BcEf9536075CC6ECe0ff21eCCa044Db9446") {
+      fetchContractData();
+    }
+  }, [account]);
   
 
   return (
@@ -171,5 +179,7 @@ const fetchTotalSupplys = async (contract: ThirdwebContract, totalIds: number, b
     totalSupply: totalIds,
     validTotalSupply: ownedIds.length,
     uniqueOwners: uniqueOwnersSet.size,
+    chainId: 4689,
+
   };
 };

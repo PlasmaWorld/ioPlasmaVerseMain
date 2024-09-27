@@ -45,11 +45,11 @@ const VrmLoader = ({ file, onLoaded }) => {
             onLoaded(vrm, []);
           }
         },
-        (progress) => console.log(`Loading model: ${Math.round((progress.loaded / progress.total) * 100)}%`),
+        (progress) => console.log('Loading model: ${Math.round((progress.loaded / progress.total) * 100)}%'),
         (error) => console.error('Error loading VRM:', error)
       );
     }
-  }, [file, scene]);
+  }, [file, scene,onLoaded]);
 
   useFrame((state, delta) => {
     if (mixerRef.current) {

@@ -9,22 +9,21 @@ import { MARKETPLACE, NETWORK } from "@/const/contracts";
 import toastStyle from "@/util/toastConfig";
 import client from "@/lib/client";
 import { isApprovedForAll, setApprovalForAll } from "thirdweb/extensions/erc721";
+import { fetchEvents } from "@/lib/fetchedEvents2";
 
 export default function DirectListingButton({
-  nft,
   pricePerToken,
   listingStart,
   listingEnd,
   contractAddress,
-  refetchAllListings
+  tokenId,
   
 }: {
-  nft: NFTType;
   pricePerToken: string;
   listingStart: string;
   listingEnd: string;
   contractAddress: string;
-  refetchAllListings: () => void;
+  tokenId: bigint;
 
 }) {
 	const router = useRouter();
@@ -44,7 +43,7 @@ export default function DirectListingButton({
 				return createListing({
 					contract: MARKETPLACE,
 					assetContractAddress: address,
-					tokenId: nft.id,
+					tokenId: tokenId,
 					pricePerToken,
 				});
 			}}
@@ -64,13 +63,13 @@ export default function DirectListingButton({
 				});
 			}}
 			onTransactionConfirmed={async (txResult) => {
+
 				toast("Listed Successfully!", {
 					icon: "🥳",
 					id: "direct",
 					style: toastStyle,
 					position: "bottom-center",
 				});
-				await refetchAllListings();
         router.refresh();
 
 			}}

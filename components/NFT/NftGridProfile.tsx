@@ -1,36 +1,39 @@
 "use client";
-import type { Address, NFT as NFTType } from "thirdweb";
+import type { Address } from "thirdweb";
 import React, { useMemo, useState } from "react";
-import { DirectListing, EnglishAuction, Offer } from "thirdweb/extensions/marketplace";
+import { EnglishAuction, Offer } from "thirdweb/extensions/marketplace";
 import { NFTCard } from "./NftCardGalerie";
 import { LoadingNFTComponent } from "./NFT";
 import { PaginationHelperProfile } from "../NFT/PaginationProfile";
+import { ListingStatus } from "@/customDirectListing/DirectListingListingStatis";
+import { useMarketplaceData } from "@/Hooks/MarketProvider";
 
 type Props = {
   ownedNfts2?: { [key: string]: number[] };
-  nftData?: {
-    tokenId: bigint;
-    listing?: (DirectListing | EnglishAuction)[];
-    offers?: Offer[];
-  }[];
-  overrideOnclickBehavior?: (nft: NFTType) => void;
-  emptyText?: string;
-  refetchAllListings: () => void;
-  refetchAllAuctions: () => void;
-  refetchAllOffers: () => void;
 };
+
+interface DirectListing {
+  id: bigint;
+  creatorAddress: Address;
+  assetContractAddress: Address;
+  tokenId: bigint;
+  quantity: bigint;
+  currencyContractAddress: Address;
+  currencySymbol: string;
+  pricePerToken: string;
+  startTimeInSeconds: bigint;
+  endTimeInSeconds: bigint;
+  isReservedListing: boolean;
+  status: number;
+}
 
 export default function NFTGridProfile({
   ownedNfts2,
-  nftData = [],
-  overrideOnclickBehavior,
-  emptyText = "No NFTs found for this collection.",
-  refetchAllListings,
-  refetchAllAuctions,
-  refetchAllOffers,
 }: Props) {
   const nftsPerPage = 20;
   const [page, setPage] = useState(1);
+
+  const { validListings } = useMarketplaceData();
 
   const totalNfts = useMemo(() => {
     return ownedNfts2 ? Object.values(ownedNfts2).flat().length : 0;
@@ -52,21 +55,18 @@ export default function NFTGridProfile({
       <div>
         <div className="grid justify-start grid-cols-1 gap-6 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2">
           {paginatedNfts.map(({ contractAddress, id }) => {
-            const marketData = nftData.find(
-              (nft) =>
-                nft.tokenId === BigInt(id) &&
-                nft.listing?.some((listing) => listing.assetContractAddress === contractAddress)
+            const marketData = validListings.find(
+              (listing: DirectListing) =>
+                listing.tokenId === BigInt(id) &&
+                listing.assetContractAddress === contractAddress
             );
             return (
               <NFTCard
                 key={`${contractAddress}_${id}`}
                 tokenId={BigInt(id)}
                 contractAddresse={contractAddress}
-                overrideOnclickBehavior={overrideOnclickBehavior}
-                refetchAllListings={refetchAllListings}
-                refetchAllAuctions={refetchAllAuctions}
-                refetchAllOffers={refetchAllOffers}
-                nft={marketData || null} // Pass marketData if available, otherwise null
+                chainId={4689}
+                event={[]}
               />
             );
           })}
@@ -77,28 +77,10 @@ export default function NFTGridProfile({
   }
 
   // If nftData is provided and there are no owned NFTs, show marketplace NFTs grid
-  if (nftData.length > 0) {
-    return (
-      <div className="grid justify-start grid-cols-1 gap-6 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2">
-        {nftData.map((data) => (
-          <NFTCard
-            key={data.tokenId.toString()}
-            nft={data}
-            overrideOnclickBehavior={overrideOnclickBehavior}
-            refetchAllListings={refetchAllListings}
-            refetchAllAuctions={refetchAllAuctions}
-            refetchAllOffers={refetchAllOffers}
-          />
-        ))}
-      </div>
-    );
-  }
-
   // If neither ownedNfts2 nor nftData is provided, show empty state
   return (
     <div className="flex justify-center items-center h-[500px]">
       <p className="max-w-lg text-lg font-semibold text-center text-white/60">
-        {emptyText}
       </p>
     </div>
   );
