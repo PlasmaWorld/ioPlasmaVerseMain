@@ -9,7 +9,7 @@ import { getNFT } from 'thirdweb/extensions/erc721';
 import { NFT as NFTType } from "thirdweb";
 import { BigNumber } from 'ethers';
 import { ChattApp } from '@/const/contracts';
-import { fetchioPlasmaMarketplace, fetchMimoMarketplace } from '@/lib/watchContractEvents';
+import { fetchIoPlasmaContract, fetchMimoMarketplace } from '@/lib/watchContractEvents';
 
 type UserContextType = {
     signerAddress?: string;
@@ -72,10 +72,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         console.error("Client is not initialized");
         return null;
     }
-    useEffect(() => {
-        fetchMimoMarketplace();
-        fetchioPlasmaMarketplace();
-      }, [fetchMimoMarketplace, fetchioPlasmaMarketplace]);
+    
       
     // Get the contract
     const fetchUserInfo = useCallback(async (signerAddress: string | undefined, contract: ThirdwebContract) => {

@@ -408,6 +408,12 @@ async function fetchIoPlasmaContract(
       events: [preparedEvent4],
     });
 
+    const marketplaceEvents6 = await getContractEvents({
+      contract: marketplaceContract2,
+      fromBlock: currentBlock,
+      toBlock: latestBlockNumber,
+      events: [preparedEvent5,preparedEvent4,preparedEvent3,preparedEvent2,preparedEvent1],
+    });
 
     // Combine and process events
       let eventName: string = "Transfer";
@@ -432,17 +438,17 @@ async function fetchIoPlasmaContract(
       const relatedSale3 = marketplaceEvents3.find(sale => 
         sale.args?.assetContract.toLowerCase() === nftContractAddress.toLowerCase()
       );
-      const relatedSale4 = marketplaceEvents4.find(sale => 
-        sale.args?.assetContract.toLowerCase() === nftContractAddress.toLowerCase()
-      );
+      
 
       // Check if this transfer matches a marketplace sale
       const relatedSaleIoPlasma = marketplaceEventsIoPlasma.find(sale =>
         sale.args?.listing.assetContract.toLowerCase() === nftContractAddress 
        
       );
-
-      if (relatedSale4) {
+      const relatedSale4 = marketplaceEvents6.find(sale => 
+        sale.args?.assetContract.toLowerCase() === nftContractAddress.toLowerCase()
+      );
+      if (relatedSale4?.eventName === "NewBid") {
         eventName = relatedSale4.eventName;
         listingId = relatedSale4.args.auctionId.toString();
         from = relatedSale4.args?.bidder;
@@ -467,16 +473,16 @@ async function fetchIoPlasmaContract(
    
 
 
-      } else if (relatedSale3) {
-        eventName = relatedSale3.eventName;
-        from = relatedSale3.args?.auctionCreator;
-        to = relatedSale3.args?.winningBidder;
-        listingId = relatedSale3.args.auctionId.toString();
-        blockNumber = relatedSale3.blockNumber.toString();
-        tokenId = relatedSale3.args?.tokenId.toString();
-        transactionHash = relatedSale3.transactionHash;
+      } else if (relatedSale4?.eventName === "AuctionClosed") {
+        eventName = relatedSale4.eventName;
+        from = relatedSale4.args?.auctionCreator;
+        to = relatedSale4.args?.winningBidder;
+        listingId = relatedSale4.args.auctionId.toString();
+        blockNumber = relatedSale4.blockNumber.toString();
+        tokenId = relatedSale4.args?.tokenId.toString();
+        transactionHash = relatedSale4.transactionHash;
         marketplace = "ioPlasma Marketplace";
-        const blockNumberHex = `0x${relatedSale3.blockNumber.toString(16)}`;
+        const blockNumberHex = `0x${relatedSale4.blockNumber.toString(16)}`;
         const blockDetails = await getRpcClient({ client, chain: NETWORK })({
           method: "eth_getBlockByNumber",
           params: [blockNumberHex as `0x${string}`, false],
@@ -485,24 +491,24 @@ async function fetchIoPlasmaContract(
         timestamp = blockDetails?.timestamp
         ? new Date(parseInt(blockDetails.timestamp, 16) * 1000).toISOString()
         : '';
-        const listingInfo = await findAuctiomId(marketplaceContract2, relatedSale3.args.auctionId);
+        const listingInfo = await findAuctiomId(marketplaceContract2, relatedSale4.args.auctionId);
         if (listingInfo) {
           price = `${listingInfo.price} ${listingInfo.symbol}`;
         }
        
 
 
-      } else if (relatedSale2) {
-        eventName = relatedSale2.eventName;
-        from = relatedSale2.args?.auction.auctionCreator;
+      } else if (relatedSale4?.eventName === "NewAuction") {
+        eventName = relatedSale4.eventName;
+        from = relatedSale4.args?.auction.auctionCreator;
         to = ""
-        listingId = relatedSale2.args.auctionId.toString()
-        blockNumber = relatedSale2.blockNumber.toString();
-        tokenId = relatedSale2.args?.auction.tokenId.toString();
-        transactionHash = relatedSale2.transactionHash;
+        listingId = relatedSale4.args.auctionId.toString()
+        blockNumber = relatedSale4.blockNumber.toString();
+        tokenId = relatedSale4.args?.auction.tokenId.toString();
+        transactionHash = relatedSale4.transactionHash;
         marketplace = "ioPlasma Marketplace";
-        const listingInfo = await findAuctiomId2(marketplaceContract2, relatedSale2.args.auction.auctionId, relatedSale2.args.auction.buyoutBidAmount) ;
-        const blockNumberHex = `0x${relatedSale2.blockNumber.toString(16)}`;
+        const listingInfo = await findAuctiomId2(marketplaceContract2, relatedSale4.args.auction.auctionId, relatedSale4.args.auction.buyoutBidAmount) ;
+        const blockNumberHex = `0x${relatedSale4.blockNumber.toString(16)}`;
         const blockDetails = await getRpcClient({ client, chain: NETWORK })({
           method: "eth_getBlockByNumber",
           params: [blockNumberHex as `0x${string}`, false],
@@ -514,39 +520,16 @@ async function fetchIoPlasmaContract(
         if (listingInfo) {
           price = `Buyout${listingInfo.bidAmount} ${listingInfo.symbol} Aucion starts from ${listingInfo.price} ${listingInfo.symbol}`;
         }
-      } else if (relatedSaleIoPlasma) {
-        eventName = relatedSaleIoPlasma.eventName;
-        from = relatedSaleIoPlasma.args?.listing.listingCreator;
+      } else if (relatedSale4?.eventName === "UpdatedListing") {
+        eventName = relatedSale4.eventName;
+        from = relatedSale4.args?.listing.listingCreator;
         to = ""
-        listingId = relatedSaleIoPlasma.args?.listingId.toString();
-        blockNumber = relatedSaleIoPlasma.blockNumber.toString();
-        tokenId = relatedSaleIoPlasma.args?.listing.tokenId.toString();
-        transactionHash = relatedSaleIoPlasma.transactionHash;
+        listingId = relatedSale4.args?.listingId.toString();
+        blockNumber = relatedSale4.blockNumber.toString();
+        tokenId = relatedSale4.args?.listing.tokenId.toString();
+        transactionHash = relatedSale4.transactionHash;
         marketplace = "ioPlasma Marketplace";
-        const blockNumberHex = `0x${relatedSaleIoPlasma.blockNumber.toString(16)}`;
-      const blockDetails = await getRpcClient({ client, chain: NETWORK })({
-        method: "eth_getBlockByNumber",
-        params: [blockNumberHex as `0x${string}`, false],
-      });
-      
-      timestamp = blockDetails?.timestamp
-      ? new Date(parseInt(blockDetails.timestamp, 16) * 1000).toISOString()
-      : '';
-        const listingInfo = await findListingId(marketplaceContract2, relatedSaleIoPlasma.args.listingId);
-
-        if (listingInfo) {
-          price = `${listingInfo.price} ${listingInfo.symbol}`;
-        }
-      } else if (relatedSale) {
-        eventName = relatedSale.eventName;
-        from = relatedSale.args?.listing.listingCreator;
-        to = "";
-        listingId = relatedSale.args?.listingId.toString();
-        blockNumber = relatedSale.blockNumber.toString();
-        tokenId = relatedSale.args?.listing.tokenId.toString();
-        transactionHash = relatedSale.transactionHash;
-        marketplace = "ioPlasma Marketplace";
-        const blockNumberHex = `0x${relatedSale.blockNumber.toString(16)}`;
+        const blockNumberHex = `0x${relatedSale4.blockNumber.toString(16)}`;
       const blockDetails = await getRpcClient({ client, chain: NETWORK })({
         method: "eth_getBlockByNumber",
         params: [blockNumberHex as `0x${string}`, false],
@@ -555,34 +538,35 @@ async function fetchIoPlasmaContract(
       timestamp = blockDetails?.timestamp
       ? new Date(parseInt(blockDetails.timestamp, 16) * 1000).toISOString()
       : '';
-        const listingInfo = await findListingId(marketplaceContract2, relatedSale.args.listingId);
+        const listingInfo = await findListingId(marketplaceContract2, relatedSale4.args.listingId);
+
         if (listingInfo) {
           price = `${listingInfo.price} ${listingInfo.symbol}`;
-        }
-
-        const imageUrl = await handleReadNft(nftContractAddress, relatedSale.args?.listing.tokenId);
-
-              
-        if (listingInfo && imageUrl) {
-          const response = await fetch('http://localhost:3000/api/sendTelegramMessageListing', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              seller: relatedSale.args.listingCreator,
-              price: `${listingInfo?.price} ${listingInfo?.symbol}`,
-              collection: imageUrl?.name,
-              tokenId: relatedSale.args.listing.tokenId.toString(),
-              marketplace: "ioPlasma Marketplace",
-              imageUrl: imageUrl?.imageUrl, // Replace with the actual image URL
-            }),
-          });
-        
-          const result = await response.json();
-          console.log('Response from server:', result); // Log the server response
         }
      
+      } else if (relatedSale4?.eventName === "NewListing") {
+        eventName = relatedSale4.eventName;
+        from = relatedSale4.args?.listing.listingCreator;
+        to = "";
+        listingId = relatedSale4.args?.listingId.toString();
+        blockNumber = relatedSale4.blockNumber.toString();
+        tokenId = relatedSale4.args?.listing.tokenId.toString();
+        transactionHash = relatedSale4.transactionHash;
+        marketplace = "ioPlasma Marketplace";
+        const blockNumberHex = `0x${relatedSale4.blockNumber.toString(16)}`;
+      const blockDetails = await getRpcClient({ client, chain: NETWORK })({
+        method: "eth_getBlockByNumber",
+        params: [blockNumberHex as `0x${string}`, false],
+      });
+
+      timestamp = blockDetails?.timestamp
+      ? new Date(parseInt(blockDetails.timestamp, 16) * 1000).toISOString()
+      : '';
+        const listingInfo = await findListingId(marketplaceContract2, relatedSale4.args.listingId);
+        if (listingInfo) {
+          price = `${listingInfo.price} ${listingInfo.symbol}`;
+        }
+         
       }
 
 
@@ -1221,6 +1205,36 @@ switch (contractType) {
     const preparedEventMimo2 = prepareEvent({
       signature: "event TakerBid(bytes32 orderHash, uint256 orderNonce, address indexed taker, address indexed maker, address indexed strategy, address currency, address collection, uint256 tokenId, uint256 amount, uint256 price)"
     });
+
+    const preparedEvent1 = prepareEvent({
+      signature: "event NewListing(address indexed listingCreator, uint256 indexed listingId, address indexed assetContract, (uint256 listingId, uint256 tokenId, uint256 quantity, uint256 pricePerToken, uint128 startTimestamp, uint128 endTimestamp, address listingCreator, address assetContract, address currency, uint8 tokenType, uint8 status, bool reserved) listing)"
+    });
+
+    const preparedEvent2 = prepareEvent({
+      signature: "event UpdatedListing(address indexed listingCreator, uint256 indexed listingId, address indexed assetContract, (uint256 listingId, uint256 tokenId, uint256 quantity, uint256 pricePerToken, uint128 startTimestamp, uint128 endTimestamp, address listingCreator, address assetContract, address currency, uint8 tokenType, uint8 status, bool reserved) listing)"
+    });
+
+    const preparedEvent3 = prepareEvent({
+      signature: "event NewAuction(address indexed auctionCreator, uint256 indexed auctionId, address indexed assetContract, (uint256 auctionId, uint256 tokenId, uint256 quantity, uint256 minimumBidAmount, uint256 buyoutBidAmount, uint64 timeBufferInSeconds, uint64 bidBufferBps, uint64 startTimestamp, uint64 endTimestamp, address auctionCreator, address assetContract, address currency, uint8 tokenType, uint8 status) auction)"
+    });
+    
+
+    const preparedEvent4 = prepareEvent({
+      signature: "event AuctionClosed(uint256 indexed auctionId, address indexed assetContract, address indexed closer, uint256 tokenId, address auctionCreator, address winningBidder)"
+    });
+    
+    const preparedEvent5 = prepareEvent({
+      signature: "event NewBid(uint256 indexed auctionId, address indexed bidder, address indexed assetContract, uint256 bidAmount, (uint256 auctionId, uint256 tokenId, uint256 quantity, uint256 minimumBidAmount, uint256 buyoutBidAmount, uint64 timeBufferInSeconds, uint64 bidBufferBps, uint64 startTimestamp, uint64 endTimestamp, address auctionCreator, address assetContract, address currency, uint8 tokenType, uint8 status) auction)" 
+    });
+    const marketplaceEventIoPlasma2 = prepareEvent({
+      signature: "event NewSale(address indexed listingCreator, uint256 indexed listingId, address indexed assetContract, uint256 tokenId, address buyer, uint256 quantityBought, uint256 totalPricePaid)"
+    });
+    const marketplaceEvents6 = await getContractEvents({
+      contract: marketplaceContract2,
+      fromBlock: currentBlock,
+      toBlock: toBlock,
+      events: [preparedEvent5,preparedEvent4,preparedEvent3,preparedEvent2,preparedEvent1,marketplaceEventIoPlasma2],
+    });
   
     const marketplaceEvents2 = await getContractEvents({
       contract: marketplaceContract,
@@ -1238,16 +1252,9 @@ switch (contractType) {
       events: eventsData,
     });
     
-    const marketplaceEventIoPlasma2 = prepareEvent({
-      signature: "event NewSale(address indexed listingCreator, uint256 indexed listingId, address indexed assetContract, uint256 tokenId, address buyer, uint256 quantityBought, uint256 totalPricePaid)"
-    });
+    
 
-    const marketplaceEventsIoPlasma = await getContractEvents({
-      contract: marketplaceContract2,
-      fromBlock: currentBlock,
-      toBlock: toBlock,
-      events: [marketplaceEventIoPlasma2],
-    });
+   
 
     // Combine and process events
     if (nftTransferEvents.length > 0) {
@@ -1273,11 +1280,7 @@ switch (contractType) {
 
             let transactionHash: string = "";
 
-            const relatedSaleIoPlasma = marketplaceEventsIoPlasma?.find(sale =>
-              sale.args?.assetContract?.toLowerCase() === nftContract.address.toLowerCase() &&
-              sale.args?.tokenId?.toString() === event.args?.tokenId?.toString() &&
-              sale.blockNumber?.toString() === event.blockNumber?.toString()
-            );
+            
 
             const relatedSaleMimo = marketplaceEvents2?.find(sale =>
               sale.args?.collection?.toLowerCase() === nftContract.address.toLowerCase() &&
@@ -1285,7 +1288,10 @@ switch (contractType) {
               sale.blockNumber?.toString() === event.blockNumber?.toString()
             );
 
-           
+            const relatedSale4 = marketplaceEvents6.find(sale => 
+              sale.args?.assetContract.toLowerCase() === nftContractAddress.toLowerCase()
+            );
+            
 
              if (event.args?.from === "0x0000000000000000000000000000000000000000") {
               
@@ -1317,68 +1323,18 @@ switch (contractType) {
               const decimalsBigInt = BigInt(10 ** 18); // Convert decimals to BigInt safely
               const transformedPrice = (BigInt(relatedSaleMimo.args.price.toString()) / decimalsBigInt).toString(); // Perform division with BigInt
               price = `${transformedPrice} Iotex`;
-              const imageUrl = await handleReadNft(nftContractAddress, relatedSaleMimo.args?.tokenId);
-
-              
-
-              if ( imageUrl) {
-                const response = await fetch('http://localhost:3000/api/sendTelegramMessageSale', {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({
-                    buyer: relatedSaleMimo.args.taker,
-                  seller: relatedSaleMimo.args.maker,
-                  price: `${transformedPrice} Iotex`,
-                  collection: imageUrl?.name,
-                  tokenId: event.args.tokenId.toString(),
-                  marketplace: "Mimo Marketpace",
-                  imageUrl: imageUrl?.imageUrl, 
-                  }),
-                });
-              
-                const result = await response.json();
-                console.log('Response from server:', result); // Log the server response
-              }
-            } else if (relatedSaleIoPlasma) {
+             
+            } else if (relatedSale4?.eventName === "NewSale") {
               eventName = "Sale";
               marketplace = marketplaceContract2.address;
-              from = relatedSaleIoPlasma.args?.listingCreator;
-              listingId = relatedSaleIoPlasma.args?.listingId.toString();
-              to = relatedSaleIoPlasma.args?.buyer;
-              const listingInfo = await findListingId(marketplaceContract2, relatedSaleIoPlasma.args?.listingId);
+              from = relatedSale4.args?.listingCreator;
+              listingId = relatedSale4.args?.listingId.toString();
+              to = relatedSale4.args?.buyer;
+              const listingInfo = await findListingId(marketplaceContract2, relatedSale4.args?.listingId);
 
               if (listingInfo) {
                 price = `${listingInfo.price} ${listingInfo.symbol}`;
               }
-
-              const imageUrl = await handleReadNft(nftContractAddress, relatedSaleIoPlasma.args?.tokenId);
-
-              if ( imageUrl && listingInfo) {
-                const response = await fetch('http://localhost:3000/api/sendTelegramMessageSale', {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({
-                    buyer: relatedSaleIoPlasma.args.buyer,
-                    seller: relatedSaleIoPlasma.args.listingCreator,
-                    price: `${listingInfo?.price} ${listingInfo?.symbol}`,
-                    collection: imageUrl?.name,
-                    tokenId: event.args.tokenId.toString(),
-                    marketplace: "ioPlasmaVerse Marketplace",
-                    imageUrl: imageUrl?.imageUrl, 
-                  }),
-                });
-              
-                const result = await response.json();
-                console.log('Response from server:', result); // Log the server response
-              }
-              
-
-
-            
             } else if (event.eventName === "Transfer") {
               const listingInfo = await fetchNftSaleSale(event.transactionHash, chainId);
               console.log("Fetched listing info for Transfer event:", listingInfo);
@@ -1420,6 +1376,110 @@ switch (contractType) {
               
             
 
+            } else if (relatedSale4?.eventName === "NewBid") {
+              eventName = relatedSale4.eventName;
+              listingId = relatedSale4.args.auctionId.toString();
+              from = relatedSale4.args?.bidder;
+              to = "";
+              blockNumber = relatedSale4.blockNumber.toString();
+              tokenId = relatedSale4.args?.auction.tokenId.toString();
+              transactionHash = relatedSale4.transactionHash;
+              marketplace = "ioPlasma Marketplace";
+              const listingInfo = await findAuctiomId2(marketplaceContract2, relatedSale4.args?.auction.auctionId, relatedSale4.args?.bidAmount);
+              if (listingInfo) {
+                price = `Bid ${listingInfo.bidAmount} ${listingInfo.symbol} New Price${listingInfo.price} ${listingInfo.symbol}`;
+              }
+              const blockNumberHex = `0x${relatedSale4.blockNumber.toString(16)}`;
+            const blockDetails = await getRpcClient({ client, chain: NETWORK })({
+              method: "eth_getBlockByNumber",
+              params: [blockNumberHex as `0x${string}`, false],
+            });   
+            } else if (relatedSale4?.eventName === "AuctionClosed") {
+              eventName = relatedSale4.eventName;
+              from = relatedSale4.args?.auctionCreator;
+              to = relatedSale4.args?.winningBidder;
+              listingId = relatedSale4.args.auctionId.toString();
+              blockNumber = relatedSale4.blockNumber.toString();
+              tokenId = relatedSale4.args?.tokenId.toString();
+              transactionHash = relatedSale4.transactionHash;
+              marketplace = "ioPlasma Marketplace";
+              const blockNumberHex = `0x${relatedSale4.blockNumber.toString(16)}`;
+              const blockDetails = await getRpcClient({ client, chain: NETWORK })({
+                method: "eth_getBlockByNumber",
+                params: [blockNumberHex as `0x${string}`, false],
+              });
+        
+             
+              const listingInfo = await findAuctiomId(marketplaceContract2, relatedSale4.args.auctionId);
+              if (listingInfo) {
+                price = `${listingInfo.price} ${listingInfo.symbol}`;
+              }
+             
+      
+      
+            } else if (relatedSale4?.eventName === "NewAuction") {
+              eventName = relatedSale4.eventName;
+              from = relatedSale4.args?.auction.auctionCreator;
+              to = ""
+              listingId = relatedSale4.args.auctionId.toString()
+              blockNumber = relatedSale4.blockNumber.toString();
+              tokenId = relatedSale4.args?.auction.tokenId.toString();
+              transactionHash = relatedSale4.transactionHash;
+              marketplace = "ioPlasma Marketplace";
+              const listingInfo = await findAuctiomId2(marketplaceContract2, relatedSale4.args.auction.auctionId, relatedSale4.args.auction.buyoutBidAmount) ;
+              const blockNumberHex = `0x${relatedSale4.blockNumber.toString(16)}`;
+              const blockDetails = await getRpcClient({ client, chain: NETWORK })({
+                method: "eth_getBlockByNumber",
+                params: [blockNumberHex as `0x${string}`, false],
+              });
+        
+              
+              if (listingInfo) {
+                price = `Buyout${listingInfo.bidAmount} ${listingInfo.symbol} Aucion starts from ${listingInfo.price} ${listingInfo.symbol}`;
+              }
+            } else if (relatedSale4?.eventName === "UpdatedListing") {
+              eventName = relatedSale4.eventName;
+              from = relatedSale4.args?.listing.listingCreator;
+              to = ""
+              listingId = relatedSale4.args?.listingId.toString();
+              blockNumber = relatedSale4.blockNumber.toString();
+              tokenId = relatedSale4.args?.listing.tokenId.toString();
+              transactionHash = relatedSale4.transactionHash;
+              marketplace = "ioPlasma Marketplace";
+              const blockNumberHex = `0x${relatedSale4.blockNumber.toString(16)}`;
+            const blockDetails = await getRpcClient({ client, chain: NETWORK })({
+              method: "eth_getBlockByNumber",
+              params: [blockNumberHex as `0x${string}`, false],
+            });
+      
+            
+              const listingInfo = await findListingId(marketplaceContract2, relatedSale4.args.listingId);
+      
+              if (listingInfo) {
+                price = `${listingInfo.price} ${listingInfo.symbol}`;
+              }
+           
+            } else if (relatedSale4?.eventName === "NewListing") {
+              eventName = relatedSale4.eventName;
+              from = relatedSale4.args?.listing.listingCreator;
+              to = "";
+              listingId = relatedSale4.args?.listingId.toString();
+              blockNumber = relatedSale4.blockNumber.toString();
+              tokenId = relatedSale4.args?.listing.tokenId.toString();
+              transactionHash = relatedSale4.transactionHash;
+              marketplace = "ioPlasma Marketplace";
+              const blockNumberHex = `0x${relatedSale4.blockNumber.toString(16)}`;
+            const blockDetails = await getRpcClient({ client, chain: NETWORK })({
+              method: "eth_getBlockByNumber",
+              params: [blockNumberHex as `0x${string}`, false],
+            });
+      
+           
+              const listingInfo = await findListingId(marketplaceContract2, relatedSale4.args.listingId);
+              if (listingInfo) {
+                price = `${listingInfo.price} ${listingInfo.symbol}`;
+              }
+               
             }
 
             const timestamp = blockDetails.timestamp;
@@ -1455,16 +1515,7 @@ switch (contractType) {
 
   // Combine all events and sort by timestamp
   allFetchedEvents.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
-  const listingEvents = await fetchIoPlasmaContract(
-    marketplaceContract2,
-    tableName,
-    startBlock,
-    latestBlockNumber,
-    NETWORK,
-    nftContractAddress,
-    chainId,
-    
-  );
+  
 
   console.log(`Inserting ${allFetchedEvents.length} events into the database.`);
 
@@ -1493,11 +1544,11 @@ switch (contractType) {
     ]);
   }
   
-  console.log(`Successfully fetched and inserted events for contract ${listingEvents} on chain ${chainId}.`);
+  console.log(`Successfully fetched and inserted events for contract  on chain ${chainId}.`);
 
   return allFetchedEvents;
 }
-
+ 
 
 async function fetchEventsWhenTableDoesNotExist(
   nftContract: ThirdwebContract,
@@ -1898,7 +1949,7 @@ async function fetchEventsWhenTableDoesNotExist(
               const decimalsBigInt = BigInt(10 ** 18); // Convert decimals to BigInt safely
               const transformedPrice = (BigInt(relatedSaleMimo.args.price.toString()) / decimalsBigInt).toString(); // Perform division with BigInt
               price = `${transformedPrice} Iotex`;
-            
+              to = relatedSaleMimo.args.taker;
 
             } else if (relatedSaleIoPlasma) {
               eventName = "Sale";

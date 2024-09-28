@@ -15,7 +15,7 @@ import { useReadContract } from "thirdweb/react";
 
 
 export default function Home(): JSX.Element {
-   
+  
 return (
     <>
       <HeroSection />

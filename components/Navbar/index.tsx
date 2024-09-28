@@ -110,7 +110,7 @@ export function Navbar() {
           <div className={styles.connectProfile}>
             {account ? (
               <div className={styles.connectProfileWrapper}>
-                <ConnectButton client={client} />
+                <ConnectButton client={client} chain={NETWORK}/>
                 <Link href={`/profile/${account?.address}`} passHref className={styles.profileLink}>
                   <div className={styles.profileImageContainer}>
                     <Image src="/user-icon.png" width={42} height={42} alt="Profile" />
