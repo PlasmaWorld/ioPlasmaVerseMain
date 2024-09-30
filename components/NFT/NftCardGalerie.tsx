@@ -103,6 +103,8 @@ type INFTCardProps = {
   contractAddresse?: string;
   chainId: number;
  event: any[];
+ autoShowInfo?: boolean; // Add this prop
+
 };
 
 export const NFTCard: FC<INFTCardProps> = ({
@@ -110,6 +112,7 @@ export const NFTCard: FC<INFTCardProps> = ({
   contractAddresse,
   chainId,
   event,
+  autoShowInfo,
 }) => {
   const account = useActiveAccount();
   const [tokenUriImage, setTokenURI] = useState<string>("");
@@ -137,6 +140,12 @@ export const NFTCard: FC<INFTCardProps> = ({
     ),
     [validListings, contractAddresse, tokenId]
   );
+
+  useEffect(() => {
+    if (autoShowInfo) {
+      setShowInfo(true);
+    }
+  }, [autoShowInfo]);
 
 useEffect(() => {
 
@@ -324,13 +333,10 @@ useEffect(() => {
 
 
   
-  const handleCloseInfo = () => {
-    setShowInfo(false);
-    setVrmFile(null); // Clean up VRM file when modal is closed
-  };
+  
 
   return (
-    <div className={styles.nftCard} onClick={() => setShowInfo(true)} role="button" aria-label="Show more info">
+      <div className={styles.nftCard} onClick={() => setShowInfo(true)} role="button" aria-label="Show more info">
       {account && ownerAddress === account.address && (
         <div>
          

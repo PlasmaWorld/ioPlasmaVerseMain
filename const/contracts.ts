@@ -82,6 +82,36 @@ const SOcial = "0xcA06107e6291a5aB0821B08BD2bA92f3743B6266";
     chain: NETWORK,
   });
 
+  const galaxe3 = "0x7f37290ea2d4b25dc92869ad127c38db273df8ee";
+  export const galazyContract3= getContract({
+    address: galaxe3,
+    client,
+    chain: NETWORK,
+  });
+  const galaxe1 = "0x50b39041d55e7a1f24e9013916f894255cdfca8b";
+  export const galazyContract1= getContract({
+    address: galaxe1,
+    client,
+    chain: NETWORK,
+  });
+  const galaxe2 = "0xd40171fa36990a81eb528e10a151b492b0df55a4";
+  export const galazyContract2= getContract({
+    address: galaxe2,
+    client,
+    chain: NETWORK,
+  });
+  const galaxe4 = "0x8ffcd1b97639d0be0f9ec18e97cec1ab03a8bb10";
+  export const galazyContract4= getContract({
+    address: galaxe4,
+    client,
+    chain: NETWORK,
+  });
+  const powerpod = "0x3acd87176676e9b93f823e5e5e1d3069171c985d";
+  export const powerPodContract= getContract({
+    address: powerpod,
+    client,
+    chain: NETWORK,
+  });
   const xSumo = "0x7d150d3eb3ad7ab752df259c94a8ab98d700fc00";
   export const XSumoContract= getContract({
     address: xSumo,

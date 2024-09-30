@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import styles from '@/components/MintApp/NftMint.module.css';
-import { Chain, defineChain, getContract, prepareContractCall, PreparedTransaction, resolveMethod, ThirdwebContract } from 'thirdweb';
+import { Chain, defineChain, getContract, prepareContractCall, PreparedTransaction, prepareTransaction, resolveMethod, ThirdwebClient, ThirdwebContract, toWei } from 'thirdweb';
 import { MediaRenderer, TransactionButton, useActiveAccount, useSendTransaction } from 'thirdweb/react';
 import { AppMint, ChattApp, ChattApp2, NETWORK } from '@/const/contracts';
 import client from '@/lib/client';
@@ -56,7 +56,7 @@ interface ClaimComponentProps {
     const [activeTab, setActiveTab] = useState<string>('vrm');
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [selectedFileVideo, setSelectedFileVideo] = useState<File | null>(null);
-  
+    const address = account?.address;
     const NETWORK = defineChain(chainId);
   
     const contract: ThirdwebContract = getContract({
@@ -168,7 +168,7 @@ interface ClaimComponentProps {
       }
     };
   
-    const prepareTransaction = async (): Promise<PreparedTransaction<any>> => {
+    const handleMint = async () => {
       const resolvedMethod = await resolveMethod("mintTo");
   
       if (!resolvedMethod) {
@@ -218,31 +218,28 @@ interface ClaimComponentProps {
           vrm_url: ipfsUrlVrm,
           attributes: attributes,
         };
-  
-        const metadataString = JSON.stringify(metadataObject);
-        const metadataBlob = new Blob([metadataString], { type: 'application/json' });
-        const metadataFile = new File([metadataBlob], 'metadata.json');
-  
-        const metadataUri = await upload({
-          client,
-          files: [metadataFile],
+
+        const response = await fetch('/api/getMint', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({  name: nftName,
+            description: nftDescription,
+            image: ipfsUrlImage, 
+            animation_url: ipfsUrlVideo,
+            vrm_url: ipfsUrlVrm,
+            attributes: attributes,
+            address: address}),
         });
-  
-        if (!metadataUri || metadataUri.length === 0) {
-          throw new Error("Failed to upload metadata to IPFS");
+        if (!response.ok) {
+          throw new Error('Failed to update contract stats');
         }
   
-        const ipfsUrl = `${metadataUri}`;
-        console.log("Metadata uploaded to IPFS: ", ipfsUrl);
+        const result = await response.json();
+        console.log('Updated contract stats:', result);
   
-        return prepareContractCall({
-          contract: contract,
-          method: resolvedMethod,
-          params: [
-            account?.address,
-            ipfsUrl
-          ],
-        });
+       
       } catch (error) {
         console.error("Error preparing transaction:", error);
         throw error;
@@ -259,6 +256,19 @@ interface ClaimComponentProps {
         attributes: metadata.attributes || [],
       };
     };
+
+    const prepareFundTransfer = async () => {
+      const transaction = prepareTransaction({
+        to: "0xd0EBa99b4BA31bE62B8F41a155b299329116E7b4",  // Receiver's address
+        chain: NETWORK,
+        client: client,  // ThirdwebClient instance
+        value: toWei("1.0"),  // Sending 1 Ether (converted to wei)
+        gasPrice: 30n,  // Gas price in wei (or you can use maxFeePerGas/maxPriorityFeePerGas)
+      });
+      return transaction;
+  };
+
+
   
   
     const handleTransactionSent = () => {
@@ -267,6 +277,7 @@ interface ClaimComponentProps {
   
     const handleTransactionConfirmed = () => {
       console.log("Transaction confirmed");
+      handleMint();
     };
   
     const handleTransactionError = (error: { message: React.SetStateAction<string | null>; }) => {
@@ -426,10 +437,11 @@ interface ClaimComponentProps {
           ))}
           <button onClick={addAttribute} className={styles.addAttributeButton}>Add Attribute</button>
         </div>
-  
+        
+
         <TransactionButton
           className={styles.mintButton}
-          transaction={prepareTransaction}
+          transaction={prepareFundTransfer}
           onTransactionSent={handleTransactionSent}
           onTransactionConfirmed={handleTransactionConfirmed}
           onError={handleTransactionError}

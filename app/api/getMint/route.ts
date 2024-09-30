@@ -18,6 +18,7 @@ export async function POST(req: NextRequest) {
             { status: 500 }
         );
     }
+    const { name, description, image, animation_url, vrm_url, attributes, address } = await req.json();
 
     try {
         const mintResponse = await fetch(
@@ -30,11 +31,14 @@ export async function POST(req: NextRequest) {
                     "x-backend-wallet-address": BACKEND_WALLET_ADDRESS,
                 },
                 body: JSON.stringify({
-                    receiver: "0x515D1BcEf9536075CC6ECe0ff21eCCa044Db9446",
+                    receiver: address,
                     metadata: {
-                        name: "AI NFT",
-                        description: "AI generated NFT",
-                        image: "",
+                        name: name,
+                        description: description,
+                        image: image,
+                        animation_url: animation_url,
+                        vrm_url: vrm_url,
+                        attributes:attributes
                     }
                 })
             }

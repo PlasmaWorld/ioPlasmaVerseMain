@@ -16,8 +16,38 @@ const scheduledApiCall = ingestClient.createFunction(
     return data; // Handle API response here
   }
 );
-// This will serve the scheduled API call
+
+const scheduledApiCall2 = ingestClient.createFunction(
+  { id: "Scheduled API Nft Call" }, // Function name
+  { cron: "*/60 * * * *" }, // Cron schedule: every 5 minutes
+  async () => {
+    // Your API call logic
+    const response = await fetch("https://www.ioplasmaverse.com/api/saveNftEvents", {
+      method: "POST",
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({}), // Add your request body if needed
+    });
+
+    const data = await response.json();
+    return data; // Handle API response here
+  }
+);
+const scheduledApiCall3 = ingestClient.createFunction(
+  { id: "Scheduled API Nft2 Call" }, // Function name
+  { cron: "*/66 * * * *" }, // Cron schedule: every 5 minutes
+  async () => {
+    // Your API call logic
+    const response = await fetch("https://www.ioplasmaverse.com/api/saveNftEvents2", {
+      method: "POST",
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({}), // Add your request body if needed
+    });
+
+    const data = await response.json();
+    return data; // Handle API response here
+  }
+);
 export const { GET, POST, PUT } = serve({
   client: ingestClient,
-  functions: [scheduledApiCall], // Add other functions as needed
+  functions: [scheduledApiCall,scheduledApiCall2,scheduledApiCall3], // Add other functions as needed
 });

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, ReactNode, useState, useCallback, useRef } from 'react';
-import {  WebStreamContract, MachinFiContract, MimoAlbieContract, MimoBimbyContract, MimoGizyContract, MimoPipiContract, MimoSpaceContract, LoxodromeContract, SumoContractContract, XSumoContract, RobotAiContract, BuzzBotsContract, SpunksContract, NFT_COLLECTION, AppMint, IotexPunksContract } from '../const/contracts';
+import {  WebStreamContract, MachinFiContract, MimoAlbieContract, MimoBimbyContract, MimoGizyContract, MimoPipiContract, MimoSpaceContract, LoxodromeContract, SumoContractContract, XSumoContract, RobotAiContract, BuzzBotsContract, SpunksContract, NFT_COLLECTION, AppMint, IotexPunksContract, powerPodContract, galazyContract1, galazyContract2, galazyContract3, galazyContract4 } from '../const/contracts';
 import { NFT as NFTType, ThirdwebContract } from "thirdweb";
 import { useActiveAccount, MediaRenderer, useReadContract } from "thirdweb/react";
 import { tokensOfOwner } from 'thirdweb/extensions/erc721';
@@ -258,6 +258,11 @@ export const NftProvider: React.FC<UserProviderProps> = ({ children }) => {
               fetchOwnedNfts("0xdfbbeba6d17b0d49861ab7f26cda495046314370", BuzzBotsContract);
               fetchOwnedNfts("0xaf1b5063a152550aebc8d6cb0da6936288eab3dc", RobotAiContract);             
               fetchOwnedNfts("0xc52121470851d0cba233c963fcbb23f753eb8709", SpunksContract);
+              fetchOwnedNfts("0x3acd87176676e9b93f823e5e5e1d3069171c985d", powerPodContract);
+              fetchOwnedNfts("0x8ffcd1b97639d0be0f9ec18e97cec1ab03a8bb10", galazyContract4);
+              fetchOwnedNfts("0xd40171fa36990a81eb528e10a151b492b0df55a4", galazyContract2);             
+              fetchOwnedNfts("0x50b39041d55e7a1f24e9013916f894255cdfca8b", galazyContract1);
+              fetchOwnedNfts("0x7f37290ea2d4b25dc92869ad127c38db273df8ee", galazyContract3);
 
 
           }

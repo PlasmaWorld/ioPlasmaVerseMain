@@ -46,6 +46,31 @@ import ClaimAppErc1155 from '@/components/claim/claimAppERC1155';
 import MintComponentErc1155 from '@/components/MintApp/MintAppErc1155';
 import NftGeneratorApp from '@/components/NftMintApp/NftGenerator';
 
+type TokenData = {
+  value: number; // You can define more fields as needed
+};
+
+const numbers: string[] = Array.from({ length: 10000 }, (_, i) => (i + 1).toString());
+
+const hashMap = {
+  explorer: 'explorer',
+  contractData: 'contractData',
+  lazyMint: 'lazyMint',
+  claim: 'claim',
+  mint: 'mint',
+  claimConditionErc721: 'claimConditionErc721',
+  claimCondition: 'claimCondition',
+  metadata: 'metadata',
+  claimConditionErc1155: 'claimConditionErc1155',
+  lazyMintErc1155: 'lazyMintErc1155',
+  claimErc1155: 'claimErc1155',
+  mintErc1155: 'mintErc1155',
+  appGenerator: 'appGenerator',
+  nfts: 'nfts',
+} as const;
+type SectionName = keyof typeof hashMap;
+
+
 const PlasmaWorld: React.FC = () => {
   const router = useRouter();
   const { contractAddress, Chain } = useParams();
@@ -53,7 +78,6 @@ const PlasmaWorld: React.FC = () => {
   const chainId = Array.isArray(Chain) ? Chain[0] : Chain;
   const chainIdNumber = parseInt(chainId, 10); // Convert chainId to number
   const nftsPerPage = 30;
-  
   const [activeContract, setActiveContract] = useState<any>(null);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState<string>('');
@@ -63,6 +87,8 @@ const PlasmaWorld: React.FC = () => {
   const [showExplorer, setShowExplorere] = useState(false);
   const [showClaim, setShowClaim] = useState(false);
   const [showClaimConditionErc721, setShowClaimConditionErc721] = useState(false);
+  const [showInfo, setShowInfo] = useState(false);
+  const [showInfo2, setShowInfo2] = useState(true);
 
   const [showMetaData, setShowMetadata] = useState(false);
   const [showClaimConditionErc1155, setShowClaimConditionErc1155] = useState(false);
@@ -108,7 +134,7 @@ const PlasmaWorld: React.FC = () => {
   const NETWORK = defineChain(chainIdNumber); // Use chainIdNumber here
   const contract = useMemo(() => getContract({ address: address as string, client, chain: NETWORK }), [address, NETWORK]);
   const [contractType, setContractType] = useState<any>(null);
-
+  const [tokenIdHash, setTokenId] = useState<any>(null);
   const { data: isERC721ContractData } = useReadContract(isERC721, { contract });
   const { data: isERC1155ContractData } = useReadContract(isERC1155, { contract });
   const { data: contractMetadata, refetch: refetchContractMetadata } = useReadContract(getContractMetadata, { contract });
@@ -117,6 +143,10 @@ const PlasmaWorld: React.FC = () => {
   const { data: isErc721DropData } = useReadContract(getTotalUnclaimedSupply, { contract });
   const { data: nextTokenIdToMintContract } = useReadContract(nextTokenIdToMint, { contract });
   const { data: sharedMetadataData } = useReadContract(sharedMetadata, { contract });
+  const [activeSection, setActiveSection] = useState<SectionName | ''>('');
+
+  // List of hash mappings
+  
   const start = useMemo(() => (page - 1) * nftsPerPage, [page, nftsPerPage]);
 
   useEffect(() => {
@@ -140,14 +170,80 @@ const PlasmaWorld: React.FC = () => {
       setIsLoading(false); // Loading finished once data is fetched
     }
   }, [nftsfetch]);
+  const isSectionName = (value: string): value is SectionName => {
+    return Object.values(hashMap).includes(value as SectionName);
+};
 
   // Pagination handler
   const handlePageChange = (newPage: number) => {
     setPage(newPage);
     setIsLoading(true); // Start loading when page changes
   };
-
+ 
   
+
+  useEffect(() => {
+    const hash = window.location.hash.replace('#', '');
+
+    if (!window.location.hash) {
+      // Redirect to the same URL but with "#nfts"
+      const newUrl = `${window.location.pathname}${window.location.search}#nfts`;
+      router.push(`/contracts/${chainId}/${address}#nfts`);
+      setActiveSection('nfts');
+
+    } else if (isSectionName(hash)) {
+          setActiveSection(hash);
+        }else if (hash && /^[0-9]+$/.test(hash)) {
+          setActiveSection('nfts');
+
+          setTokenId(hash);
+          setSearch(hash);
+          
+      } else {
+          setActiveSection('');
+      }
+      
+
+    const handleHashChange = () => {
+        const currentHash = window.location.hash.replace('#', '');
+        if (isSectionName(currentHash)) {
+            setActiveSection(currentHash);
+            
+        }else if (currentHash && /^[0-9]+$/.test(currentHash)) {
+          setTokenId(currentHash);
+          setActiveSection('nfts');
+
+          setSearch(currentHash);
+        } else {
+            setActiveSection('');
+        }
+    };
+  
+
+    window.addEventListener('hashchange', handleHashChange);
+
+    return () => {
+        window.removeEventListener('hashchange', handleHashChange);
+    };
+}, []);
+
+const toggleSection = useCallback(
+    (section: SectionName) => {
+        const hashValue = hashMap[section]; // This line should work correctly now
+        if (activeSection !== section) {
+            router.push(`/contracts/${chainId}/${address}#${hashValue}`);
+            setActiveSection(section);
+        }else if (activeSection) {
+          router.push(`/contracts/${chainId}/${address}#${hashValue}`);
+          setActiveSection(section);
+        } else {
+            router.push(`/contracts/${chainId}/${address}#nfts`);
+            setActiveSection('nfts');
+        }
+    },
+    [activeSection, router, address, chainId]
+  );
+
 
   const fetchContractType = useCallback(async (contract: ThirdwebContract) => {
     if (!contract) return;
@@ -356,7 +452,10 @@ const PlasmaWorld: React.FC = () => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     if (/^\d+$/.test(value)) {
+      setShowInfo(false);
       setSearch(value);
+      setActiveSection('nfts');
+
     } else {
       setSearch('');
     }
@@ -366,7 +465,12 @@ const PlasmaWorld: React.FC = () => {
     if (debouncedSearchTerm) {
       const id = parseInt(debouncedSearchTerm, 10);
       if (!isNaN(id)) {
+        setShowInfo2(false)
         setSearchedId(id);
+        router.push(`/contracts/${chainId}/${contractAddress}#${id}`);
+        window.location.hash = `#${id}`;
+        setActiveSection('nfts');
+      
       } else {
         setSearchedId(null);
       }
@@ -387,8 +491,32 @@ const PlasmaWorld: React.FC = () => {
     setShowOwned(prev => !prev);
   }, [showOwned, activeContract, fetchNftsOwnedErc721, fetchOwnedNftsErc1155,isERC721ContractData,isERC1155ContractData]);
 
-  const toggleExplorer = useCallback(() => {
-    setShowExplorere(prev => !prev);
+  
+  // Update the showExplorer state based on the URL hash when the component first loads
+  useEffect(() => {
+    const hash = window.location.hash;
+
+    // If the hash is #explorer, show the explorer
+    if (hash === '#explorer') {
+      setShowExplorere(true);
+    } else {
+      setShowExplorere(false);
+    }
+
+    // Listen for hash changes to handle manual URL changes
+    const handleHashChange = () => {
+      if (window.location.hash === '#explorer') {
+        setShowExplorere(true);
+      } else {
+        setShowExplorere(false);
+      }
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+    };
   }, []);
 
   const toggleContractData = useCallback(() => {
@@ -451,80 +579,79 @@ const PlasmaWorld: React.FC = () => {
 
 
         <Button onClick={handleShowOwnedClick}>
-          {showOwned ? 'Show All NFTs' : 'Show Owned NFTs'}
-        </Button>
+                {showOwned ? 'Show All NFTs' : 'Show Owned NFTs'}
+            </Button>
 
-       
-        <Button onClick={toggleExplorer}>
-          {showExplorer ? 'Hide Explorer' : 'Show Explorer'}
-        </Button>
+            <Button onClick={() => toggleSection('explorer')}>
+                {activeSection === 'explorer' ? 'Hide Explorer' : 'Show Explorer'}
+            </Button>
 
-          <Button onClick={toggleContractData}>
-            {contractData ? 'Hide ContractSettings' : 'ContractSettings'}
-          </Button>
-        
+            <Button onClick={() => toggleSection('contractData')}>
+                {activeSection === 'contractData' ? 'Hide ContractSettings' : 'ContractSettings'}
+            </Button>
 
-          {contractType === "0x44726f7045524337323100000000000000000000000000000000000000000000" ? (
-          <Button onClick={toggleContractLazyMint}>
-            {showLayzMint ? 'Hide LazyMint' : 'Show LazyMint'}
-          </Button>
+            {contractType === "0x44726f7045524337323100000000000000000000000000000000000000000000" && (
+                <Button onClick={() => toggleSection('lazyMint')}>
+                    {activeSection === 'lazyMint' ? 'Hide LazyMint' : 'Show LazyMint'}
+                </Button>
+            )}
 
-        ) : null}
-          {isERC721ContractData == true && isErc721MintTo == false && (
-        <Button onClick={toggleContractMint}>
-          {showMint ? 'Hide Mint' : 'Show Mint'}
-        </Button>
-          )}
+            {address.toLowerCase() === "0x600DA20E193624fbbbe1dE8324f8CCfcf2A4a63D".toLowerCase() && (
+                <Button onClick={() => toggleSection('lazyMint')}>
+                    {activeSection === 'lazyMint' ? 'Hide LazyMint' : 'Show LazyMint'}
+                </Button>
+            )}
 
-        {contractType === "0x44726f7045524337323100000000000000000000000000000000000000000000" ? (
-          <Button onClick={toggleContractClaim}>
-            {showClaim ? 'Hide ContractClaim' : 'ContractClaim'}
-          </Button>
-        ) : null}
+            {isERC721ContractData && !isErc721MintTo && (
+                <Button onClick={() => toggleSection('mint')}>
+                    {activeSection === 'mint' ? 'Hide Mint' : 'Show Mint'}
+                </Button>
+            )}
 
+            {contractType === "0x44726f7045524337323100000000000000000000000000000000000000000000" && (
+                <Button onClick={() => toggleSection('claim')}>
+                    {activeSection === 'claim' ? 'Hide ContractClaim' : 'ContractClaim'}
+                </Button>
+            )}
 
-          {contractType === "0x44726f7045524331313535000000000000000000000000000000000000000000" ? (
-          <Button onClick={toggleContractClaimErc1155}>
-            {showClaimErc1155 ? 'Hide ContractClaim' : 'ContractClaim'}
-          </Button>
-        ) : null}
+            {contractType === "0x44726f7045524331313535000000000000000000000000000000000000000000" && (
+                <>
+                    <Button onClick={() => toggleSection('claimErc1155')}>
+                        {activeSection === 'claimErc1155' ? 'Hide ContractClaim' : 'ContractClaim'}
+                    </Button>
+                    <Button onClick={() => toggleSection('claimConditionErc1155')}>
+                        {activeSection === 'claimConditionErc1155' ? 'Hide ClaimCondition' : 'ClaimCondition'}
+                    </Button>
+                    <Button onClick={() => toggleSection('lazyMintErc1155')}>
+                        {activeSection === 'lazyMintErc1155' ? 'Hide LazyMint' : 'LazyMint'}
+                    </Button>
+                </>
+            )}
 
-          {contractType === "0x44726f7045524331313535000000000000000000000000000000000000000000" ? (
-          <Button onClick={toggleContractClaimConditonErc1155}>
-            {showClaimConditionErc1155 ? 'Hide ClaimCondition' : 'ClaimCondition'}
-          </Button>
-        ) : null}
+            {contractType === "0x44726f7045524337323100000000000000000000000000000000000000000000" && (
+                <Button onClick={() => toggleSection('claimCondition')}>
+                    {activeSection === 'claimCondition' ? 'Hide ContractClaimCondition' : 'ContractClaimCondition'}
+                </Button>
+            )}
 
-          {contractType === "0x44726f7045524331313535000000000000000000000000000000000000000000" ? (
-          <Button onClick={toggleLazyMintErc1155}>
-            {showLazyMintErc1155 ? 'Hide LazyMint' : 'LazyMint'}
-          </Button>
-        ) : null}
+            {contractType === "0x44726f7045524337323100000000000000000000000000000000000000000000" && (
+                <Button onClick={() => toggleSection('appGenerator')}>
+                    {activeSection === 'appGenerator' ? 'Hide NftGenerator' : 'NftGenerator'}
+                </Button>
+            )}
 
-        { contractType === "0x44726f7045524337323100000000000000000000000000000000000000000000" ? (
-          <Button onClick={toggleContractClaimCondition}>
-            {showClaimConditionErc721 ? 'Hide ContractClaimCondition' : 'ContractClaimCondition'}
-          </Button>
-                ) : null}
+            {isERC721ContractData && isErc721Metadata && (
+                <Button onClick={() => toggleSection('metadata')}>
+                    {activeSection === 'metadata' ? 'Hide ContractMetadata' : 'ContractMetadata'}
+                </Button>
+            )}
 
-          { contractType === "0x44726f7045524337323100000000000000000000000000000000000000000000" ? (
-          <Button onClick={toggleContractAppGenerator}>
-            {showAppGenerator ? 'Hide NftGenerator' : 'NftGenerator'}
-          </Button>
-                ) : null}
+            {contractType === "0x546f6b656e455243313135350000000000000000000000000000000000000000" && (
+                <Button onClick={() => toggleSection('mintErc1155')}>
+                    {activeSection === 'mintErc1155' ? 'Hide Mint' : 'Mint'}
+                </Button>
+            )}
 
-
-        {isERC721ContractData == true && isErc721Metadata == true && (
-        <Button onClick={toggleMetadata}>
-          {showMetaData ? 'Hide ContractMetadata' : 'ContractMetadata'}
-        </Button>
-        )}
-
-        {contractType === "0x546f6b656e455243313135350000000000000000000000000000000000000000" ? (
-        <Button onClick={toggleMintErc1155}>
-          {showMintErc1155 ? 'Hide Mint' : 'Mint'}
-        </Button>
-                ) : null}
 
       </div>
       <div className={styles.details}>
@@ -584,11 +711,12 @@ const PlasmaWorld: React.FC = () => {
               contractAddresse={activeContract.address}
               chainId={chainIdNumber}
               event={[""]}
+              autoShowInfo={showInfo}
             />
           </div>
         )}
 
-      {showExplorer && (
+      {activeSection === 'explorer' && (
         <div className={styles.explorer}>
           <Explorer
             contractAddress={address}
@@ -620,64 +748,65 @@ const PlasmaWorld: React.FC = () => {
       )}
         
         
-        {contractData && (
+        {activeSection === 'contractData' && (
           <div className={styles.contractData}>
             <ContractSettings contractAddress={address} chainId={chainIdNumber} />
           </div>
         )}
-        {showMint && (
+        {activeSection === 'mint' && (
           <div className={styles.mint}>
             <MintComponent contractAddress={address} chainId={chainIdNumber} />
           </div>
         )}
-        {showClaim && (
+        {activeSection === 'claim' && (
           <div className={styles.claim}>
             <ClaimAppGalerie contractAddress={address} chainId={chainIdNumber} />
           </div>
         )}
-         {showMetaData && (
+         {activeSection === 'metadata' && (
         <div className={styles.claim}>
           <SetMetadataComponent contractAddress={address} chainId={chainIdNumber} />
         </div>
       )}
       
 
-        {showClaimConditionErc721 && (
+        {activeSection === 'claimConditionErc721' && (
           <div className={styles.claim}>
             <ClaimConditonErc712 contractAddress={address} chainId={chainIdNumber} />
           </div>
         )}
-         {showLayzMint && (
+         {activeSection === 'lazyMint' && (
           <div className={styles.claim}>
             <LayzMintComponentErc721 contractAddress={address} chainId={chainIdNumber} />
           </div>
         )}
-        {showClaimErc1155 && (
+        
+        {activeSection === 'claimErc1155' && (
           <div className={styles.claim}>
             <ClaimAppErc1155 contractAddress={address} chainId={chainIdNumber} />
           </div>
         )}
-         {showClaimConditionErc1155 && (
+         {activeSection === 'claimConditionErc1155' && (
           <div className={styles.claim}>
             <ClaimConditonErc1155 contractAddress={address} chainId={chainIdNumber} />
           </div>
         )}
-         {showLazyMintErc1155 && (
+         {activeSection === 'lazyMintErc1155' && (
           <div className={styles.claim}>
             <LayzMintComponentErc1155 contractAddress={address} chainId={chainIdNumber} />
           </div>
         )}
-        {showMintErc1155 && (
+        {activeSection === 'mintErc1155' && (
           <div className={styles.mint}>
             <MintComponentErc1155 contractAddress={address} chainId={chainIdNumber} />
           </div>
         )}
-        {showAppGenerator && (
+        {activeSection === 'appGenerator' && (
           <div className={styles.mint}>
             <NftGeneratorApp contractAddress={address} chainId={chainIdNumber} />
           </div>
         )}
-        {!showExplorer && !contractData && !showMint && !showClaim && !showAppGenerator&& !showClaimConditionErc1155 &&!showClaimConditionErc721 && !showClaimConditionErc1155 && !showLayzMint && !showClaimErc1155 &&!showLazyMintErc1155 &&(
+        {activeSection === 'nfts' && (
           isLoading ? (
             <div className={styles.loadingContainer}>
               {Array.from({ length: nftsPerPage }).map((_, i) => (

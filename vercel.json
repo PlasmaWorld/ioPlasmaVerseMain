@@ -1,8 +1,21 @@
-
-  {
-    "functions": {
-      "app/api/saveContractEvents/[chainId]/[contractAddress]/route.ts": {
-        "maxDuration": 300
-      }
+{
+  "functions": {
+    "app/api/saveContractEvents/[chainId]/[contractAddress]/route.ts": {
+      "maxDuration": 300
+    },
+    "app/api/saveNftEvents2/route.ts": {
+      "maxDuration": 300
+    },
+    "app/api/saveNftEvents/route.ts": {
+      "maxDuration": 300
+    },
+    "app/api/saveMarkeplaceContracts/route.ts": {
+      "maxDuration": 300
+    },
+    "app/api/inngest/route.ts": {
+      "maxDuration": 300
     }
   }
+}
+  
+ 

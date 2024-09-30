@@ -23,25 +23,18 @@ import { PaginationHelperDefault } from '@/components/NFT/PaginationHelperDefaul
 import { getActiveClaimCondition, getOwnedNFTs } from 'thirdweb/extensions/erc721';
 import toast from 'react-hot-toast';
 import toastStyle from '@/util/toastConfig';
+import { getContractInstance } from '@/const/cotractInstance';
 
 
-const OwnedNftsComponent: FC<{ contractAddress: string; chainId: number; type: string }> = ({
+const OwnedNftsComponent: FC<{ contractAddress: string; chainId: number }> = ({
     contractAddress,
     chainId,
-    type,
   }) => {  
     const router = useRouter();
-    const address = Array.isArray(contractAddress) ? contractAddress[0] : contractAddress;
     const nftsPerPage = 20;
-    const [isSearching, setIsSearching] = useState(false);
-    const [activeContract, setActiveContract] = useState<any>(null);
-    const [page, setPage] = useState(1);
-    const [search, setSearch] = useState<string>('');
-    const [showOwned, setShowOwned] = useState(false);
-    const [contractData, setShowContractData] = useState(false); 
+     
 
     const account = useActiveAccount();
-    const isInContractList = NFT_CONTRACTS.some(contract => contract.address === address);
     const [signerAddress, setSignerAddress] = useState<string | undefined>(undefined);
     const NETWORK = defineChain(chainId); // Use chainId here
     const [ownedPage, setOwnedPage] = useState(1);
@@ -51,37 +44,42 @@ const OwnedNftsComponent: FC<{ contractAddress: string; chainId: number; type: s
     const [loading, setLoading] = useState(false);
 
     const contract = getContract({
-        address: address as string,
+        address: contractAddress,
         client,
         chain: NETWORK,
     });
 
+    
+
     const fetchOwnedNfts = useCallback(async (contractAddress: string, contract: ThirdwebContract) => {
         if (!account) return;
         setLoading(true);
-
+        
+    
         try {
+    
+            // Fetch owned NFTs using the getOwnedNFTs function
             const ownedNFTs = await getOwnedNFTs({
                 contract,
                 owner: account?.address,
             });
-
+    
+    
             const ids = ownedNFTs.map(nft => Number(nft.id));
-
+    
+            // Update the ownedNfts2 state and log the new state
             setOwnedNfts2(prevState => {
                 const updatedNfts = { ...prevState, [contractAddress]: ids };
                 return updatedNfts;
             });
-            
+    
         } catch (err) {
-            toast.error(
-                "Something went wrong while fetching your NFTs!",
-                {
-                    position: "bottom-center",
-                    style: toastStyle,
-                }
-            );
+            // Log the error if something goes wrong
+            console.error("Error fetching NFTs:", err);
+           
         } finally {
+            // Log that the loading is finished and update the loading state
+            console.log("Finished fetching NFTs, setting loading to false.");
             setLoading(false);
         }
     }, [account]);
@@ -89,7 +87,10 @@ const OwnedNftsComponent: FC<{ contractAddress: string; chainId: number; type: s
     useEffect(() => {
         if (account) {
             setSignerAddress(account.address);
-            fetchOwnedNfts(contractAddress, contract);
+
+            fetchOwnedNfts(contract.address, contract);
+            
+
         }
     }, [account, fetchOwnedNfts]);
 
@@ -115,7 +116,7 @@ const OwnedNftsComponent: FC<{ contractAddress: string; chainId: number; type: s
                         <NFTCard
                             key={id}
                             tokenId={BigInt(id)}
-                            contractAddresse={contract.address}
+                            contractAddresse={contractAddress}
                             chainId={chainId}
                             event={[]}
                         />
@@ -125,7 +126,7 @@ const OwnedNftsComponent: FC<{ contractAddress: string; chainId: number; type: s
         
             <div>
                 
-                    <PaginationHelperProfile contractAddress={activeContract.address} setPage={setOwnedPage} totalItems={ownedTokenIds.length} itemsPerPage={nftsPerPage} />
+                    <PaginationHelperProfile contractAddress={contractAddress} setPage={setOwnedPage} totalItems={ownedTokenIds.length} itemsPerPage={nftsPerPage} />
                
             </div>
         </div>

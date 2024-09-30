@@ -5,6 +5,19 @@ import { ChainList } from "@/const/ChainList";
 import TransactionModal from "@/components/transaction/transaction"; // Import the NftMintModal
 import styles from "./transaction.module.css"; // Import the CSS module
 
+type Event = {
+  transaction_hash: string;
+  block_height: string;
+  event_name: string;
+  from_address: string;
+  to_address: string;
+  price?: string; // or number, depending on your data type
+  marketplace?: string;
+  timestamp?: string;
+  token_id?: string;
+  listing_id?: string;
+};
+
 export default function Events({
   contractAddress,
   chainId,
@@ -19,6 +32,11 @@ export default function Events({
   const [filteredEvents, setFilteredEvents] = useState<any[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<any>(null); // Track selected event for modal
   const [isModalOpen, setIsModalOpen] = useState(false); // Track if modal is open
+  const [eventType, setEventType] = useState<string>(""); // Track selected event type
+  const [minSalePrice, setMinSalePrice] = useState<string | "">(""); // Track minimum sale price
+  const [maxSalePrice, setMaxSalePrice] = useState<string | "">(""); // Track maximum sale price
+  const [blockHeight, setBlockHeight] = useState<string | "">(""); // Track block height for sales filter
+  const [priceSortOrder, setPriceSortOrder] = useState<"asc" | "desc" | "">(""); // Track selected price sort order
 
   const NETWORK = defineChain(chainId);
   const chain = ChainList.find((c) => c.chainId === chainId);
@@ -30,8 +48,24 @@ export default function Events({
   useEffect(() => {
     const startIndex = (page - 1) * eventsPerPage;
     const endIndex = startIndex + eventsPerPage;
-    setFilteredEvents(events.slice(startIndex, endIndex)); // Show events for the current page
-  }, [page, events, eventsPerPage]);
+  
+    let tempEvents: Event[] = events;
+  
+    if (eventType) {
+      tempEvents = tempEvents.filter((event: Event) => event.event_name === eventType);
+    }
+  
+    if (eventType === "Sale") {
+      if (priceSortOrder === "asc") {
+        tempEvents = tempEvents.sort((a, b) => (parseFloat(a.price || "0") - parseFloat(b.price || "0")));
+      } else if (priceSortOrder === "desc") {
+        tempEvents = tempEvents.sort((a, b) => (parseFloat(b.price || "0") - parseFloat(a.price || "0")));
+      }
+    }
+  
+    setFilteredEvents(tempEvents.slice(startIndex, endIndex));
+  }, [page, events, eventsPerPage, eventType, priceSortOrder]);
+   
 
   const formatAddress = (address: string) => `${address.slice(0, 3)}...${address.slice(-3)}`;
 
@@ -70,108 +104,120 @@ export default function Events({
 
   return (
     <div className={styles.container}>
-    <div className={styles.flex}>
+       <div className={styles.filterControls}>
+       <select
+          onChange={(e) => setEventType(e.target.value)}
+          value={eventType}
+          className={styles.customSelect}  // Apply the custom class
+        >
+          <option value="">All Events</option>
+          <option value="Transfer">Transfer</option>
+          <option value="Mint">Mint</option>
+          <option value="NewListing">NewListing</option>
+          <option value="Sale">Sale</option>
+        </select>
 
-      {filteredEvents.length > 0 ? (
-        <div className={styles.tableContainer}>
-          <table className={styles.table}>
-            <thead className={styles.tableHead}>
-              <tr>
-                <th className={styles.tableCell}>Transaction Hash</th>
-                <th className={styles.tableCell}>Event</th>
-                <th className={styles.tableCell}>From</th>
-                <th className={styles.tableCell}>To</th>
-                <th className={styles.tableCell}>Price</th>
-                <th className={styles.tableCell}>Marketplace</th>
-                <th className={styles.tableCell}>Time</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredEvents.map((event, idx) => (
-                <tr key={idx} className={`${styles.tableRowOdd} ${idx % 2 === 0 ? styles.tableRowEven : ''}`}>
-                  <td className={styles.tableCell}>
-                    {event.transaction_hash ? (
-                      <button onClick={() => openModal(event)} className={styles.underlineButton}>
-                        {formatAddress(event.transaction_hash)}
-                      </button>
-                    ) : (
-                      "-"
-                    )}
-                  </td>
-                  <td className={styles.tableCell}>{event.event_name}</td>
-                  <td className={styles.tableCell}>{event.from_address ? formatAddress(event.from_address) : "-"}</td>
-                  <td className={styles.tableCell}>{event.to_address ? formatAddress(event.to_address) : "-"}</td>
-                  <td className={styles.tableCell}>{event.price || "-"}</td>
-                  <td className={styles.tableCell}>{event.marketplace ? getMarketplaceOrAddress(event.marketplace.toLowerCase()) : "-"}</td>
-                  <td className={styles.tableCell}>{event.timestamp ? formatDate(event.timestamp) : "-"}</td>
+          {eventType === "Sale" && (
+            <>
+                    <button
+              onClick={() => setPriceSortOrder("asc")}
+              className={priceSortOrder === "asc" ? styles.activeButton : styles.inactiveButton}
+            >
+              Sort Price: Low to High {priceSortOrder === "asc" && "✔️"}
+            </button>
+
+            <button
+              onClick={() => setPriceSortOrder("desc")}
+              className={priceSortOrder === "desc" ? styles.activeButton : styles.inactiveButton}
+            >
+              Sort Price: High to Low {priceSortOrder === "desc" && "✔️"}
+            </button>
+            </>
+          )}
+      <div className={styles.flex}>
+        {/* Filter Controls */}
+       
+        </div>
+
+        {filteredEvents.length > 0 ? (
+          <div className={styles.tableContainer}>
+            <table className={styles.table}>
+              <thead className={styles.tableHead}>
+                <tr>
+                  <th className={styles.tableCell}>Transaction Hash</th>
+                  <th className={styles.tableCell}>Event</th>
+                  <th className={styles.tableCell}>From</th>
+                  <th className={styles.tableCell}>To</th>
+                  <th className={styles.tableCell}>Price</th>
+                  <th className={styles.tableCell}>Marketplace</th>
+                  <th className={styles.tableCell}>Time</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-         
-      </div>
-      ) : (
-        <p className={styles.noEvents}>No events found.</p>
-      )}
-
-          
-  
-  
-      {selectedEvent && (
-     <div className={styles.transaction}>
-
-        <TransactionModal
-        transactionHash={selectedEvent.transaction_hash || ""}
-        chainId={chainId}
-        marketplace={selectedEvent.marketplace}
-        tokenId={selectedEvent.token_id}
-        listingId={selectedEvent.listing_id}
-        contractAddress={contractAddress}
-        eventName={selectedEvent.event_name}
-        from={selectedEvent.from_address}
-        to={selectedEvent.to_address}
-        timestamp={selectedEvent.timestamp}
-        price={selectedEvent.price}
-        isOpen={isModalOpen}
-        onClose={closeModal}
-      />
-      </div>
-      )}
-    </div>
-    <div className="flex justify-between mt-4">
-
-          {page > 1 && (
-
-            <button
-
-              onClick={() => setPage((prev) => prev - 1)}
-
-              className="px-4 py-2 bg-blue-500 text-white rounded"
-
-            >
-
-              Previous Events
-
-            </button>
-
-          )}
-
-          {filteredEvents.length === eventsPerPage && (
-
-            <button
-
-              onClick={() => setPage((prev) => prev + 1)}
-
-              className="px-4 py-2 bg-blue-500 text-white rounded"
-
-            >
-
-              Next Events
-
-            </button>
-
-          )}
+              </thead>
+              <tbody>
+                {filteredEvents.map((event, idx) => (
+                  <tr key={idx} className={`${styles.tableRowOdd} ${idx % 2 === 0 ? styles.tableRowEven : ''}`}>
+                    <td className={styles.tableCell}>
+                      {event.transaction_hash ? (
+                        <button onClick={() => openModal(event)} className={styles.underlineButton}>
+                          {formatAddress(event.transaction_hash)}
+                        </button>
+                      ) : (
+                        "-"
+                      )}
+                    </td>
+                    <td className={styles.tableCell}>{event.event_name}</td>
+                    <td className={styles.tableCell}>{event.from_address ? formatAddress(event.from_address) : "-"}</td>
+                    <td className={styles.tableCell}>{event.to_address ? formatAddress(event.to_address) : "-"}</td>
+                    <td className={styles.tableCell}>{event.price || "-"}</td>
+                    <td className={styles.tableCell}>{event.marketplace ? getMarketplaceOrAddress(event.marketplace.toLowerCase()) : "-"}</td>
+                    <td className={styles.tableCell}>{event.timestamp ? formatDate(event.timestamp) : "-"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
+        ) : (
+          <p className={styles.noEvents}>No events found.</p>
+        )}
+
+        {selectedEvent && (
+          <div className={styles.transaction}>
+            <TransactionModal
+              transactionHash={selectedEvent.transaction_hash || ""}
+              chainId={chainId}
+              marketplace={selectedEvent.marketplace}
+              tokenId={selectedEvent.token_id}
+              listingId={selectedEvent.listing_id}
+              contractAddress={contractAddress}
+              eventName={selectedEvent.event_name}
+              from={selectedEvent.from_address}
+              to={selectedEvent.to_address}
+              timestamp={selectedEvent.timestamp}
+              price={selectedEvent.price}
+              isOpen={isModalOpen}
+              onClose={closeModal}
+            />
+          </div>
+        )}
+      </div>
+      <div className="flex justify-between mt-4">
+        {page > 1 && (
+          <button
+            onClick={() => setPage((prev) => prev - 1)}
+            className="px-4 py-2 bg-blue-500 text-white rounded"
+          >
+            Previous Events
+          </button>
+        )}
+        {filteredEvents.length === eventsPerPage && (
+          <button
+            onClick={() => setPage((prev) => prev + 1)}
+            className="px-4 py-2 bg-blue-500 text-white rounded"
+          >
+            Next Events
+          </button>
+        )}
+      </div>
     </div>
   );
 }

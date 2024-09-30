@@ -32,6 +32,29 @@ import Explorer from '@/components/Explorer/Explorer';
 import ContractSettings from '@/components/Explorer/ContractsSettings';
 import Events from '@/components/events/events';
 import ClaimAppGalerie from '@/components/claim/claimApp';
+import OwnedNftsComponent from '@/components/ownedNfts/getOwnedNfts';
+
+const hashMap = {
+  explorer: 'explorer',
+  contractData: 'contractData',
+  lazyMint: 'lazyMint',
+  claim: 'claim',
+  mint: 'mint',
+  claimConditionErc721: 'claimConditionErc721',
+  claimCondition: 'claimCondition',
+  metadata: 'metadata',
+  claimConditionErc1155: 'claimConditionErc1155',
+  lazyMintErc1155: 'lazyMintErc1155',
+  claimErc1155: 'claimErc1155',
+  mintErc1155: 'mintErc1155',
+  appGenerator: 'appGenerator',
+  transaction: 'transaction',
+  nfts: 'nfts',
+  ownedNfts: 'ownedNfts',
+
+} as const;
+type SectionName = keyof typeof hashMap;
+
 
 const PlasmaWorld: React.FC = () => {
   const router = useRouter();
@@ -52,8 +75,13 @@ const PlasmaWorld: React.FC = () => {
   const [showExplorer, setShowExplorere] = useState(false);
   const [showClaim, setShowClaim] = useState(false);
   const [showMint, setShowMint] = useState(false);
+  const [showInfo, setShowInfo] = useState(false);
+  const [showInfo2, setShowInfo2] = useState(true);
+  const [showInfo3, setShowInfo3] = useState(false);
 
   const [contractData, setShowContractData] = useState(false); 
+  const [tokenIdHash, setTokenId] = useState<any>(null);
+  const [activeSection, setActiveSection] = useState<SectionName | ''>('');
 
   const account = useActiveAccount();
   const isInContractList = NFT_CONTRACTS.some(contract => contract.address === address);
@@ -65,7 +93,9 @@ const PlasmaWorld: React.FC = () => {
   const [contractType, setContractType] = useState<any>(null);
   const [isErc721Metadata, setIsErc721MetaData] = useState(false);
   const [events, setEvents] = useState<any[]>([]);
-
+  const isSectionName = (value: string): value is SectionName => {
+    return Object.values(hashMap).includes(value as SectionName);
+};
   useEffect(() => {
     const fetchEvents = async () => {
       try {
@@ -120,28 +150,6 @@ const PlasmaWorld: React.FC = () => {
   }, [sharedMetadataData]); 
 
   let isWatching = false;  // Track if Mimo marketplace events are being watched
-
-
-  const saveEvents = async () => {
-    if (isWatching) return;  // Prevent multiple calls
-      isWatching = true;
-    try {
-      await fetch(`/api/saveContractEvents/${chainIdNumber}/${address as string}`, {
-        method: 'POST',
-      });
-
-      console.log('Events saved successfully.');
-    } catch (err) {
-      console.error('An unexpected error occurred:', err);
-    }
-  }
-
-  useEffect(() => {
-    saveEvents();
-  }, []);
-
-  
-
   
 
 
@@ -158,6 +166,69 @@ const PlasmaWorld: React.FC = () => {
   });
 
   
+
+  useEffect(() => {
+    const hash = window.location.hash.replace('#', '');
+
+    if (!window.location.hash) {
+      // Redirect to the same URL but with "#nfts"
+      const newUrl = `${window.location.pathname}${window.location.search}#nfts`;
+      router.push(`/NftGalerie/${chainId}/${address}#nfts`);
+      setShowInfo3(true);
+      setActiveSection('nfts');
+
+    } else if (isSectionName(hash)) {
+          setActiveSection(hash);
+        }else if (hash && /^[0-9]+$/.test(hash)) {
+          setActiveSection('nfts');
+
+          setTokenId(hash);
+          setSearch(hash);
+          
+      } else {
+          setActiveSection('');
+      }
+      
+
+    const handleHashChange = () => {
+        const currentHash = window.location.hash.replace('#', '');
+        if (isSectionName(currentHash)) {
+            setActiveSection(currentHash);
+            
+        }else if (currentHash && /^[0-9]+$/.test(currentHash)) {
+          setTokenId(currentHash);
+          setActiveSection('nfts');
+
+          setSearch(currentHash);
+        } else {
+            setActiveSection('');
+        }
+    };
+  
+
+    window.addEventListener('hashchange', handleHashChange);
+
+    return () => {
+        window.removeEventListener('hashchange', handleHashChange);
+    };
+}, []);
+
+const toggleSection = useCallback(
+    (section: SectionName) => {
+        const hashValue = hashMap[section]; // This line should work correctly now
+        if (activeSection !== section) {
+            router.push(`/NftGalerie/${chainId}/${address}#${hashValue}`);
+            setActiveSection(section);
+        }else if (activeSection) {
+          router.push(`/NftGalerie/${chainId}/${address}#${hashValue}`);
+          setActiveSection(section);
+        } else {
+            router.push(`/NftGalerie/${chainId}/${address}#nfts`);
+            setActiveSection('nfts');
+        }
+    },
+    [activeSection, router, address, chainId]
+  );
 
   useEffect(() => {
     console.log("useEffect triggered with contractAddress:", contractAddress);
@@ -223,7 +294,10 @@ const PlasmaWorld: React.FC = () => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     if (/^\d+$/.test(value)) {
+      setShowInfo(false);
       setSearch(value);
+      setActiveSection('nfts');
+
     } else {
       setSearch('');
     }
@@ -233,7 +307,11 @@ const PlasmaWorld: React.FC = () => {
     if (debouncedSearchTerm) {
       const id = parseInt(debouncedSearchTerm, 10);
       if (!isNaN(id)) {
+        setShowInfo2(false)
         setSearchedId(id);
+        window.location.hash = `#${id}`;
+        setActiveSection('nfts');
+      
       } else {
         setSearchedId(null);
       }
@@ -269,6 +347,7 @@ const PlasmaWorld: React.FC = () => {
 }, [account, contract]);
 
   useEffect(() => {
+    fetchOwnedNfts(address,contract)
     setIsSearching(!!searchedId);
   }, [searchedId]);
 
@@ -286,30 +365,7 @@ const PlasmaWorld: React.FC = () => {
     return ownedTokenIds.slice(start, start + nftsPerPage);
   }, [ownedPage, ownedTokenIds, nftsPerPage]);
 
-  const handleShowOwnedClick = useCallback(() => {
-    if (!showOwned && activeContract) {
-      fetchOwnedNfts(activeContract.address, contract);
-    }
-    setShowOwned(prev => !prev);
-  }, [showOwned, activeContract, fetchOwnedNfts, contract]);
-
-  const toggleExplorer = useCallback(() => {
-    setShowExplorere(prev => !prev);
-  }, []);
-
   
-
-  const toggleContractData = useCallback(() => {
-    setShowContractData(prev => !prev);
-  }, []);
-
-  const toggleContractClaim = useCallback(() => {
-    setShowClaim(prev => !prev);
-  }, []);
-
-  const toggleContractMint = useCallback(() => {
-    setShowMint(prev => !prev);
-  }, []);
 
   return (
     <div className={styles.container}>
@@ -326,25 +382,21 @@ const PlasmaWorld: React.FC = () => {
             </Menu.Item>
           ))}
         </Menu>
-        <Button onClick={handleShowOwnedClick}>
-          {showOwned ? 'Show All NFTs' : 'Show Owned NFTs'}
+        <Button onClick={() => toggleSection('nfts')}>
+                {activeSection === 'nfts' ? 'Hide nfts' : 'Show nfts'}
+            </Button>
+        <Button onClick={() => toggleSection('explorer')}>
+                {activeSection === 'explorer' ? 'Hide Explorer' : 'Show Explorer'}
+            </Button>
+
+            <Button onClick={() => toggleSection('ownedNfts')}>
+                {activeSection === 'ownedNfts' ? 'Hide ownedNfts' : 'Show ownedNfts'}
+            </Button>
+            
+
+        <Button onClick={() => toggleSection('transaction')}>
+          {activeSection === 'transaction' ? 'Hide Transactions' : 'Show Transactions'}
         </Button>
-        <Button onClick={toggleExplorer}>
-          {showExplorer ? 'Hide Explorer' : 'Show Explorer'}
-        </Button>
-        {contractType === "0x44726f7045524337323100000000000000000000000000000000000000000000" ? (
-          <Button onClick={toggleContractData}>
-            {showExplorer ? 'Hide ContractSettings' : 'ContractSettings'}
-          </Button>
-        ) : null}
-        <Button onClick={toggleContractMint}>
-          {showMint ? 'Hide Transactions' : 'Show Transactions'}
-        </Button>
-        {claimCondition && (
-          <Button onClick={toggleContractClaim}>
-            {showClaim ? 'Hide ContractClaim' : 'ContractClaim'}
-          </Button>
-        )}
       </div>
       <div className={styles.details}>
         {activeContract && (
@@ -406,10 +458,11 @@ const PlasmaWorld: React.FC = () => {
               contractAddresse={activeContract.address}
               chainId={chainIdNumber} 
               event={[]}
+              autoShowInfo={showInfo}
             />
           </div>
         )}
-        {showExplorer && (
+        {activeSection === 'explorer' && (
         <div className={styles.explorer}>
           <Explorer
             contractAddress={address}
@@ -439,12 +492,12 @@ const PlasmaWorld: React.FC = () => {
           />
            </div>
       )}
-        {contractData && (
+        {activeSection === 'ownedNfts' && (
           <div className={styles.contractData}>
-            <ContractSettings contractAddress={address} chainId={chainIdNumber} />
+            <OwnedNftsComponent contractAddress={address} chainId={chainIdNumber} />
           </div>
         )}
-        {showMint && (
+        {activeSection === 'transaction' && (
           <div className={styles.events}>
             <Events contractAddress={address} chainId={chainIdNumber} events={events} />
           </div>
@@ -454,7 +507,7 @@ const PlasmaWorld: React.FC = () => {
             <ClaimAppGalerie contractAddress={address} chainId={chainIdNumber} />
           </div>
         )}
-        {!showExplorer && !contractData && !showMint && !showClaim && (
+        {activeSection === 'nfts' && (
           isLoading ? (
             <div className={styles.loadingContainer}>
               {Array.from({ length: nftsPerPage }).map((_, i) => (

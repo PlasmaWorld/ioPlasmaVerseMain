@@ -116,6 +116,7 @@ export type NFTMetadata = {
   rank?: number;
   image?: string;
   animation_url?: string;
+  vrm_url?: string;
   external_url?: string;
   background_color?: string;
   properties?: Record<string, unknown>;
@@ -260,7 +261,7 @@ export const NFTCardContracts: FC<INFTCardProps> = ({
 
   useEffect(() => {
     const fetchVrmFile = async () => {
-      const vrmFile = currentNFT.metadata.vrm_file;
+      const vrmFile = currentNFT.metadata.vrm_url;
   
       if (typeof vrmFile === 'string') {  // Ensure it's a string
         console.log("Fetching VRM file...");
@@ -358,18 +359,17 @@ export const NFTCardContracts: FC<INFTCardProps> = ({
           )}
            {currentNFT.metadata.animation_url&& (
 
-            <button onClick={() => setSelectedTab('image')} className={selectedTab === 'image' ? styles.activeTab : ''}>Image</button>
+            <button onClick={() => setSelectedTab('video')} className={selectedTab === 'video' ? styles.activeTab : ''}>videos</button>
         )}
-          {currentNFT.metadata.image&& (
+          {currentNFT.metadata.vrm_url && (
 
           <button onClick={() => setSelectedTab('vrm')} className={selectedTab === 'vrm' ? styles.activeTab : ''}>VRM</button>
             )}                     
-                 <button onClick={() => setSelectedTab('vrm')} className={selectedTab === 'vrm' ? styles.activeTab : ''}>VRM</button>
-                    </div>
-                  <div className={styles.nftCard}>
-                    
+                 
+               <div>     
                     {renderMedia()}
                     {!currentNFT && <p>NFT metadata not available.</p>}
+                  </div>
                   </div>
                   <div className={profileStyles.title}>
                     {account && ownerAddress === account.address && !directListing && (

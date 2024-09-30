@@ -138,21 +138,24 @@ const ContractSettings: FC<{ contractAddress: string; chainId: number }> = ({
     try {
       const resolvedMethod = await resolveMethod(methodName);
       if (!resolvedMethod) {
-        throw new Error("Failed to resolve method");
+        console.warn(`Method ${methodName} is not available on this contract.`);
+        return null; // Return null or a default value instead of throwing an error
       }
+  
       const result = await readContract({
         contract,
         method: resolvedMethod,
         params,
       });
-
+  
       console.log(`Result of ${methodName}:`, result);
       return result;
     } catch (error) {
       console.error(`Error reading contract for ${methodName}:`, error);
-      throw error;
+      return null; // Return null or handle the error in a way that doesn't crash the app
     }
   };
+  
  
  
  
@@ -174,9 +177,16 @@ const ContractSettings: FC<{ contractAddress: string; chainId: number }> = ({
   
   const handleReadgetDefaultRoyaltyInfo = async () => {
     const result = await handleReadContract("getDefaultRoyaltyInfo", []);
+    if (result !== null && Array.isArray(result)) {
+
     setGetRoyaltyRecipient(result[0] as string);
     setGetRoyaltyBps(result[1] as string);
-  };
+  } else {
+    console.warn('Result is null or not an array. Cannot set royalty recipient or BPS.');
+    setGetRoyaltyRecipient(''); // Default value
+    setGetRoyaltyBps('0'); // Default value
+  }
+};
 
  
   useEffect(() => {
@@ -431,9 +441,16 @@ const ContractSettings: FC<{ contractAddress: string; chainId: number }> = ({
 
     const handleReadPlatformFeeInfo = async () => {
       const result = await handleReadContract("getPlatformFeeInfo", []);
+      if (result !== null && Array.isArray(result)) {
+
       setPlatformFeeInfoRecipient(result[0] as string);
       setPlatformFeeBps(result[1] as string);
-    };
+    } else {
+      console.warn('Result is null or not an array. Cannot set royalty recipient or BPS.');
+      setGetRoyaltyRecipient(''); // Default value
+      setGetRoyaltyBps('0'); // Default value
+    }
+  };
 
     const handleReadSymbol = async () => {  
       const result = await handleReadContract("symbol", []);
